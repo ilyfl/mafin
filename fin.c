@@ -2,15 +2,16 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
 #include <mysql/mysql.h>
+#include <stdint.h>
 #include "fin.h"
 
-void prompt(t_answer* form);
-void mysql_create(const char * username,const char * password);
-void get_pass_from_user(char* password);
-void get_username(char *username);
 
-void prompt(t_answer* f){
+
+
+uint8_t prompt(answer_t* f){
 	system("clear");
 	if(f->typecome)
 	{
@@ -25,10 +26,11 @@ void prompt(t_answer* f){
 	{
 
 	}
+	return 0;
 }
 
 
-void mysql_create(const char* user, const char* pass){
+void mysql_create(const char* db){
 	MYSQL *sqlfd = mysql_init(NULL);
 	if (sqlfd == NULL)
 	{
@@ -43,12 +45,11 @@ void mysql_create(const char* user, const char* pass){
 		exit(1);
 	}
 
-	char db_create[32]= "CREATE DATABASE ";
-	strcat(db_create, user);
-	strcat(db_create, "_fin");
+	char db_create[64]= "CREATE DATABASE ";
+	strcat(db_create, db);
 
 	if (mysql_query(sqlfd, db_create)){
-		printf("%s\n" mysql_error(sqlfd));
+		printf("%s\n", mysql_error(sqlfd));
 		mysql_close(sqlfd);
 		exit(1);
 	}
@@ -56,50 +57,75 @@ void mysql_create(const char* user, const char* pass){
 
 }
 
-void get_username(){
+//TODO: no echo input
+uint8_t get_password(char *password)
+{
+	fgets(password, sizeof(password), stdin);
+
+	uint8_t len = strlen(password)-1;	
+	password[len]='\0';
+
+	if((strlen(password) < MIN_INP_LEN))
+	{
+		printf("Password has to contain up to %d and more than %d characters!\n",MAX_INP_LEN, MIN_INP_LEN);
+		return 1;
+	}
+	return 0;
+}
+
+
+uint8_t get_name(char *name){
+	uint8_t i;
+
+	fgets(name, sizeof(name), stdin);
+	
+	uint8_t len = strlen(name)-1;	
+	name[len]='\0';
+
+	for(i=0; i<len; i++)
+	{
+		if(!isalnum(name[i]))
+		{
+			printf("Name can include only alphanumeric characters!\n");
+			return 1;
+		}
+	}
+	if( !(i>=MIN_INP_LEN))
+	{
+		printf("Name should be longer than 2 symbols and less then 12\n");	
+		return 1;
+	}
+	return 0;
 
 }
 
-int main()
+int main(int argc, char** argv)
 {
-	char username[11];
-	char password[16];
+	char dbname[MAX_INP_LEN];
+//      char password[MAX_INP_LEN];
+
+	system("clear");
 start:
-       	printf("Username: ");
-	fgets(username, sizeof(username), stdin);
-
-	if(!strlen(username) > 2)
+	//TODO: ask user for path to the directory where db stored
+	//othewise default path will be used
+	printf("Database name: ");
+	if(get_name(dbname))
 	{
-		printf("Username should be longer than 2 symbols\n");	
-		goto start;
+		goto start;	
 	}
+//
+//	printf("Password: ");
+//	if(get_password(password))
+//	{
+//		goto start;
+//	}
 
-	for(unsigned char i=0; i<11; i++)
-	{
-		if(isalnum(username[i]))
-			;
-		else
-		{
-			printf("Username can include only alphanumeric characters!\n");
-			goto start;
-		}
-	}
+//	mysql_create(dbname);
 
-	printf("Password: ");
-	fgets(password, sizeof(password), stdin);
-
-	if(strlen(password)<6)
-	{
-		printf("Password has to contain more than 6 characters!\n";
-		goto start;
-	}
-
-	mysql_create(username,password);
-
-	t_answer info;
-	printf("%d\n", sizeof(t_answer));
+	answer_t info;
+	printf("%d\n", sizeof(user_t));
 	printf("Outcome(0)/Income(1)?: ");	
-	info.typecome=getchar();
+	while((info.typecome=getchar()))
 	if(info.typecome == '1' || info.typecome == '0')
 	{
 		info.typecome-='0';
@@ -107,7 +133,6 @@ start:
 	}
 	else{
 		printf("Incorrect input!\n");
-		exit(1);
 	}
 }
 
