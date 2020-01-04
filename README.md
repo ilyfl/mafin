@@ -48,6 +48,7 @@ WINDOWS(GUI):
 
 Version 0.1:  
 - ONLY CLI(linux)  
+- Config file for stuff like path to the database
 - Local db as a file (not sql)   
 - User has to specify file directory location and name for the first time(only once)  
 - No password  
