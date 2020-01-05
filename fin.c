@@ -9,21 +9,71 @@
 #include "fin.h"
 
 
+uint8_t read_config()
+{
+
+}
+
+void print_categories(uint8_t typecome){
+	for(int i = 0; i < CAT_MAX; i++)
+			printf("%s(%d), ", categories[typecome][i], i);
+}
 
 
-uint8_t prompt(answer_t* f){
+uint8_t prompt(answer_t* info){
+	char dbname[NAME_MAX];
+//      char password[NAME_MAX];
+	char dbpath[PATH_MAX]="/home/";
+
+	strcat(dbpath, getenv("USER"));
+	strcat(dbpath, "/mafin/");
+
+
 	system("clear");
-	if(f->typecome)
+start:
+	//TODO: ask user for path to the directory where db stored
+	//othewise default path will be used
+	printf("Database name: ");
+	if(get_name(dbname))
 	{
-		printf("Category: Salary(0), Wages(1), Random(2): ");
-		f->category=getchar();	
-		switch(f->category){
+		goto start;	
+	}
+	
+//
+//	printf("Password: ");
+//	if(get_password(password))
+//	{
+//		goto start;
+//	}
+
+//	mysql_create(dbname);
+
+	printf("Outcome(0)/Income(1)?: ");	
+	while((info->typecome=getchar()))
+	if(info->typecome == '1' || info->typecome == '0')
+	{
+		info->typecome-='0';
+		break;
+	}
+	else{
+		printf("Incorrect input!\n");
+	}
+
+	if(info->typecome)
+	{
+		printf("INCOME\n");
+		print_categories(info->typecome);
+		info->category=getchar();	
+		switch(info->category){
 			default:
 			break;
 		}
 	}	
 	else
 	{
+		printf("EXPENSE\n");
+		print_categories(info->typecome);
+
 
 	}
 	return 0;
@@ -67,7 +117,7 @@ uint8_t get_password(char *password)
 
 	if((strlen(password) < MIN_INP_LEN))
 	{
-		printf("Password has to contain up to %d and more than %d characters!\n",MAX_INP_LEN, MIN_INP_LEN);
+		printf("Password has to contain up to %d and more than %d characters!\n",NAME_MAX, MIN_INP_LEN);
 		return 1;
 	}
 	return 0;
@@ -92,47 +142,24 @@ uint8_t get_name(char *name){
 	}
 	if( !(i>=MIN_INP_LEN))
 	{
-		printf("Name should be longer than 2 symbols and less then 12\n");	
+		printf("Name should be longer than %d symbols and less then %d\n",MIN_INP_LEN, NAME_MAX);	
 		return 1;
 	}
 	return 0;
 
 }
 
+uint8_t get_username(char **name)
+{
+	*name=getenv("USER");
+	if(*name==NULL) return 1;
+	return 0;
+}
+
 int main(int argc, char** argv)
 {
-	char dbname[MAX_INP_LEN];
-//      char password[MAX_INP_LEN];
-
-	system("clear");
-start:
-	//TODO: ask user for path to the directory where db stored
-	//othewise default path will be used
-	printf("Database name: ");
-	if(get_name(dbname))
-	{
-		goto start;	
-	}
-//
-//	printf("Password: ");
-//	if(get_password(password))
-//	{
-//		goto start;
-//	}
-
-//	mysql_create(dbname);
-
 	answer_t info;
-	printf("%d\n", sizeof(user_t));
-	printf("Outcome(0)/Income(1)?: ");	
-	while((info.typecome=getchar()))
-	if(info.typecome == '1' || info.typecome == '0')
-	{
-		info.typecome-='0';
-		prompt(&info);
-	}
-	else{
-		printf("Incorrect input!\n");
-	}
+	prompt(&info);
+//	printf("%d\n", sizeof(user_t));
 }
 
