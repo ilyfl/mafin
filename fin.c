@@ -2,16 +2,30 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <ctype.h>
 #include <mysql/mysql.h>
 #include <stdint.h>
 #include "fin.h"
 
-
 uint8_t read_config()
 {
+	FILE* config;
 
+	if ((config=fopen(cfgPath,"r"))==NULL)
+	{
+		return 1;
+	}
+	
+
+	uint8_t n;
+	n=fscanf(config, "dbpath=%s",dbpath);
+	if(n!=1)
+	{
+		return 10;
+	}
+
+	fclose(config);
+	return 0;
 }
 
 void print_categories(uint8_t typecome){
@@ -21,23 +35,48 @@ void print_categories(uint8_t typecome){
 
 
 uint8_t prompt(answer_t* info){
-	char dbname[NAME_MAX];
+//	char dbname[NAME_MAX];
 //      char password[NAME_MAX];
-	char dbpath[PATH_MAX]="/home/";
-
-	strcat(dbpath, getenv("USER"));
-	strcat(dbpath, "/mafin/");
 
 
-	system("clear");
+//	system("clear");
+	uint8_t flag;
 start:
-	//TODO: ask user for path to the directory where db stored
-	//othewise default path will be used
-	printf("Database name: ");
-	if(get_name(dbname))
-	{
-		goto start;	
+
+	if((flag=read_config())==1){
+		system("mkdir /home/$USER/.config/mafin && touch /home/$USER/.config/mafin/config");	
+		goto start;
 	}
+	else if(flag==10){
+		printf("Please input a path to the database(/home/$USER/mafin/finances): ");	
+		char c=getchar();
+		uint8_t i=0;
+		do {
+			if(c=='\n')
+			{
+				//poka takoi kostyl'
+				FILE *config;
+				config=fopen(cfgPath, "w+");
+				fprintf(config, "dbpath=%s\n",dbpath);
+				fclose(config);
+				break;
+			}
+			else
+			{
+				dbpath[i]=c;	
+			}
+			++i;
+		} while((c=getchar())!='\n');
+		dbpath[i]='\0';
+		printf("%s\n", dbpath);
+	}
+
+
+//	printf("Database name: ");
+//	if(get_name(dbname))
+//	{
+//		goto start;	
+//	}
 	
 //
 //	printf("Password: ");
@@ -158,6 +197,12 @@ uint8_t get_username(char **name)
 
 int main(int argc, char** argv)
 {
+	strcat(cfgPath, getenv("USER"));
+	strcat(cfgPath, "/.config/mafin/config");
+
+	strcat(dbpath, getenv("USER"));
+	strcat(dbpath, "/mafin/finances");
+
 	answer_t info;
 	prompt(&info);
 //	printf("%d\n", sizeof(user_t));
