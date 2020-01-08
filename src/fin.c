@@ -1,18 +1,15 @@
 #include "fin.h"
 
-char cfgPath[PATH_MAX]="/home/";
+	char cfgPath[PATH_MAX]="/home/";
+	char dbpath[PATH_MAX]="/home/";
 
-char dbpath[PATH_MAX]="/home/";
 
-char resources[RES_NUM][NAME_MAX]={"Cash", "Card", "Credit"};
-
-char categories[2][CAT_MAX][NAME_MAX]={{"Food", "Eating", "Entertainment", "Transport", "Bills", "Clothes", "Health", "Phone", "Toiletry", "Other"},{"Salary", "Wages", "Random"}};
 
 //currently writes on the first line only
 uint8_t write_config(const char *s, const char* var)
 {
 	FILE* config;
-	if ((config=fopen(cfgPath,"r+"))==NULL)
+	if ((config=fopen(cfgPath,"a"))==NULL)
 	{
 		return 1;
 	}
@@ -46,6 +43,7 @@ uint8_t read_config(const char *s, char* var)
 }
 
 void print_categories(const uint8_t typecome){
+	char categories[2][CAT_MAX][NAME_MAX]={{"Food", "Eating", "Entertainment", "Transport", "Bills", "Clothes", "Health", "Phone", "Toiletry", "Other"},{"Salary", "Wages", "Random"}};
 	printf("==============================\n");
 	for(uint8_t i = 0; i < CAT_MAX; ++i)
 		if(isalnum(categories[typecome][i][0]))
@@ -55,6 +53,7 @@ void print_categories(const uint8_t typecome){
 }
 
 void print_resources(){
+	char resources[RES_NUM][NAME_MAX]={"Cash", "Card", "Credit"};
 	printf("==============================\n");
 	for(uint8_t i=0; i<RES_NUM; ++i)
 		printf("%s(%d)\n", resources[i], i);
@@ -127,6 +126,7 @@ uint8_t prompt(answer_t* info){
 
 int main(int argc, char** argv)
 {
+
 	strcat(cfgPath, getenv("USER"));
 	strcat(cfgPath, "/.config/mafin/config");
 
@@ -134,7 +134,19 @@ int main(int argc, char** argv)
 	strcat(dbpath, "/mafin/finances");
 
 	answer_t info;
-	prompt(&info);
+
+	if(prompt(&info))
+	{
+		printf("Something gone wrong, try again!\n");
+		exit(1);
+	}
+	//dbpath should be created if not
+	if(storedb(&info, dbpath)){
+		printf("Something gone wrong, try again!\n");
+		exit(1);
+	}
+	return 0;
+
 //	printf("%d\n", sizeof(user_t));
 }
 

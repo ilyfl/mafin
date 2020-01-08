@@ -22,7 +22,6 @@
 
 void mysql_create(const char * dbname);
 
-
 void get_digit(int *digit);
 uint8_t get_str(char str[]);
 uint8_t get_float(float *number);
@@ -46,4 +45,5 @@ typedef struct answer{
 } answer_t;
 
 
+extern uint8_t storedb(answer_t* info, char* dbpath);
 uint8_t prompt(answer_t* form);
