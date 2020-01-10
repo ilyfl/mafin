@@ -1,46 +1,7 @@
 #include "fin.h"
 
-	char cfgPath[PATH_MAX]="/home/";
-	char dbpath[PATH_MAX]="/home/";
-
-
 
 //currently writes on the first line only
-uint8_t write_config(const char *s, const char* var)
-{
-	FILE* config;
-	if ((config=fopen(cfgPath,"a"))==NULL)
-	{
-		return 1;
-	}
-
-	fprintf(config,"%s=%s\n", s, var);
-	fclose(config);
-	return 0;
-}
-
-uint8_t read_config(const char *s, char* var)
-{
-	FILE* config;
-
-	if ((config=fopen(cfgPath,"r"))==NULL)
-	{
-		return 1;
-	}
-	
-
-	char format[16]="";
-	strcat(format, s);
-	strcat(format, "=%s");
-	if(fscanf(config, format, var)!=1)
-	{
-		fclose(config);
-		return 10;
-	}
-
-	fclose(config);
-	return 0;
-}
 
 void print_categories(const uint8_t typecome){
 	char categories[2][CAT_MAX][NAME_MAX]={{"Food", "Eating", "Entertainment", "Transport", "Bills", "Clothes", "Health", "Phone", "Toiletry", "Other"},{"Salary", "Wages", "Random"}};
@@ -62,50 +23,20 @@ void print_resources(){
 
 
 uint8_t prompt(answer_t* info){
-//	char dbname[NAME_MAX];
-//      char password[NAME_MAX];
-
-
-	uint8_t flag;
-	if((flag=read_config("dbpath", dbpath))==1){
-		printf("Couldn't open file config, try again\n");
-		system("mkdir /home/$USER/.config/mafin && touch /home/$USER/.config/mafin/config");	
+	uint8_t	mode;
+	printf("MODES:\nInput info(0)/Show totals(1)/History(2)?: ");
+	get_digit(&mode);
+	if(mode)
+	{
+		printf("Not ready!\n");
 		return 1;
 	}
-	else if(flag==10){
-		printf("Please input a path to the database(/home/$USER/mafin/finances): ");	
-		get_str(dbpath);
-		if(write_config("dbpath", dbpath))
-			return 1;
-	}
-
-
-//	printf("Database name: ");
-//	if(get_name(dbname))
-//	{
-//		goto start;	
-//	}
 	
-//
-//	printf("Password: ");
-//	if(get_password(password))
-//	{
-//		goto start;
-//	}
-
-//	mysql_create(dbname);
-
 	printf("Outcome(0)/Income(1)?: ");	
 	get_digit(&(info->typecome));
 
-//	if(info->typecome)
-//		printf("INCOME\n");
-//	else
-//		printf("EXPENSE\n");
-		
 	print_categories(info->typecome);
 	printf("Select one by specifying its number: ");
-
 	get_digit(&(info->category));
 
 	printf("Payload: ");
@@ -123,30 +54,92 @@ uint8_t prompt(answer_t* info){
 	return 0;
 }
 
+void init_env()
+{
+	char* 	username[NAME_MAX];
+	char 	command[PATH_MAX];
+	uint8_t	flag;
+	FILE* tmp;
+
+	if(get_username(username))
+	{
+		printf("Username is not defined!\n");
+		exit(1);
+	}
+	
+//initializing globals cfgPath and dbpath
+	strcpy(cfgPath,"/home/");	
+	strcat(cfgPath, *username);
+	strcat(cfgPath, "/.config/mafin/config");
+
+	strcpy(dbpath,"/home/");	
+	strcat(dbpath, *username);
+	strcat(dbpath, "/mafin/finances");
+
+//reading config file
+	if((flag=read_config("dbpath", dbpath))==1){
+		printf("Couldn't open config file\n");
+		system("mkdir -p --mode=775 /home/$USER/.config/mafin && touch /home/$USER/.config/mafin/config");	
+		exit(1);
+	}
+	else if(flag==10){
+		printf("Please input a path to the database file(/home/$USER/mafin/finances): ");	
+		get_str(dbpath);
+		if(write_config("dbpath", dbpath))
+			exit(1);
+	}
+
+	if((tmp=fopen(dbpath, "r"))==NULL)
+	{
+		flag=2;	
+		printf("Database specified is not created!\n");
+		exit(1);
+	}
+	else
+		return;
+
+//dbpath is read so create it
+//bug! creates folder not a file
+	if(flag){
+		strcpy(command,"mkdir -p -m 775 ");
+		strcat(command, dbpath);
+		system(command);
+
+		strcpy(command,"touch ");
+		strcat(command, dbpath);
+		system(command);
+	}
+	if((tmp=fopen(dbpath, "r"))==NULL)
+	{
+		printf("Database couldn't be opened!\n");
+		exit(1);
+	}
+	fclose(tmp);
+			
+}
 
 int main(int argc, char** argv)
 {
+	if(argc>1)
+	{	
+		printf("Wow you have specified an arguments, congrats!\n");
+	}
 
-	strcat(cfgPath, getenv("USER"));
-	strcat(cfgPath, "/.config/mafin/config");
+	answer_t	info;
 
-	strcat(dbpath, getenv("USER"));
-	strcat(dbpath, "/mafin/finances");
-
-	answer_t info;
+	init_env();
 
 	if(prompt(&info))
 	{
 		printf("Something gone wrong, try again!\n");
 		exit(1);
 	}
-	//dbpath should be created if not
-	if(storedb(&info, dbpath)){
-		printf("Something gone wrong, try again!\n");
+
+	if(storedb(&info, dbpath))
+	{
 		exit(1);
 	}
+	
 	return 0;
-
-//	printf("%d\n", sizeof(user_t));
 }
 

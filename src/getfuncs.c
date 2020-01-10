@@ -34,7 +34,7 @@ uint8_t get_float(float *number){
 		return 1;
 }
 
-void get_digit(int* digit)
+void get_digit(uint8_t* digit)
 {
 	unsigned char c;
 	while(c=getchar())

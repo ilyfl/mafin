@@ -19,17 +19,18 @@
 //enum income {Salary, Wages, Random};
 //enum res {Card, Cash, Credit};
 
+char cfgPath[PATH_MAX];
+char dbpath[PATH_MAX];
 
 void mysql_create(const char * dbname);
 
-void get_digit(int *digit);
+void get_digit(uint8_t *digit);
 uint8_t get_str(char str[]);
 uint8_t get_float(float *number);
 uint8_t get_password(char* password);
 uint8_t get_name(char *name);
 uint8_t get_username(char **name);
 uint8_t read_config();
-void print_categories(uint8_t typecome);
 
 //typedef struct user{
 //	char username[MAX_INP_LEN];
@@ -45,5 +46,10 @@ typedef struct answer{
 } answer_t;
 
 
-extern uint8_t storedb(answer_t* info, char* dbpath);
-uint8_t prompt(answer_t* form);
+uint8_t write_config(const char *left, const char* right);
+uint8_t read_config(const char *left, char* right);
+uint8_t readdb(char* dbpath, answer_t* info);
+uint8_t storedb(answer_t* info, char* dbpath);
+
+
+
