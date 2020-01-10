@@ -28,7 +28,7 @@ uint8_t prompt(answer_t* info){
 	get_digit(&mode);
 	if(mode)
 	{
-		printf("Not ready!\n");
+		fprintf(stderr,"Not ready!\n");
 		return 1;
 	}
 	
@@ -63,7 +63,7 @@ void init_env()
 
 	if(get_username(username))
 	{
-		printf("Username is not defined!\n");
+		fprintf(stderr,"Username is not defined!\n");
 		exit(1);
 	}
 	
@@ -78,7 +78,7 @@ void init_env()
 
 //reading config file
 	if((flag=read_config("dbpath", dbpath))==1){
-		printf("Couldn't open config file\n");
+		fprintf(stderr,"Couldn't open config file\n");
 		system("mkdir -p --mode=775 /home/$USER/.config/mafin && touch /home/$USER/.config/mafin/config");	
 		exit(1);
 	}
@@ -92,7 +92,7 @@ void init_env()
 	if((tmp=fopen(dbpath, "r"))==NULL)
 	{
 		flag=2;	
-		printf("Database specified is not created!\n");
+		fprintf(stderr,"Database specified is not created!\n");
 		exit(1);
 	}
 	else
@@ -111,7 +111,7 @@ void init_env()
 	}
 	if((tmp=fopen(dbpath, "r"))==NULL)
 	{
-		printf("Database couldn't be opened!\n");
+		fprintf(stderr,"Database couldn't be opened!\n");
 		exit(1);
 	}
 	fclose(tmp);
@@ -131,7 +131,7 @@ int main(int argc, char** argv)
 
 	if(prompt(&info))
 	{
-		printf("Something gone wrong, try again!\n");
+		fprintf(stderr,"Something gone wrong, try again!\n");
 		exit(1);
 	}
 
