@@ -3,6 +3,7 @@
 
 #include "fin.h"
 
+
 uint8_t write_config(const char *s, const char* var)
 {
 	FILE* config;
@@ -53,11 +54,14 @@ uint8_t readdb(char* dbpath, answer_t* info)
 uint8_t storedb(answer_t* info, char* dbpath)
 {
 	FILE *db;
+	time_t t = time(NULL);
+	struct tm tm = *localtime(&t);
+
 	if((db=fopen(dbpath, "a"))==NULL)
 	{	
 		return 1;	
 	}	
-
+	fprintf(db,"%02d-%02d-%d/%02d:%02d:%02d|",tm.tm_mday, tm.tm_mon+1, tm.tm_year+1900, tm.tm_hour, tm.tm_min, tm.tm_sec);	
 	fprintf(db,"%d,%d,%f,%s,%d\n", info->typecome, info->category, info->payload, info->comment, info->resource);
 
 	fclose(db);
