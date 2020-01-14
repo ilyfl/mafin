@@ -22,6 +22,7 @@ void print_resources(){
 }
 
 
+
 uint8_t prompt(answer_t* info){
 	uint8_t	mode;
 	printf("MODES:\nInput info(0)/Show totals(1)/History(2)?: ");
@@ -118,6 +119,17 @@ void init_env()
 			
 }
 
+void test(answer_t* info)
+{
+//	printf("TM: %d\n",sizeof(struct tm));
+//	printf("info: %d\n",sizeof(answer_t));
+	
+	printf("%02d-%02d-%d/%02d:%02d:%02d|",info->time.tm_mday, info->time.tm_mon+1, info->time.tm_year+1900, info->time.tm_hour, info->time.tm_min, info->time.tm_sec);	
+	printf("%d,%d,%f,%s,%d\n", info->typecome, info->category, info->payload, info->comment, info->resource);
+
+	exit(0);
+}
+
 int main(int argc, char** argv)
 {
 	if(argc>1)
@@ -139,7 +151,13 @@ int main(int argc, char** argv)
 	{
 		exit(1);
 	}
-	
+
+	if(readdb(dbpath, &info))
+	{
+		exit(1);
+	}
+
+	test(&info);	
 	return 0;
 }
 

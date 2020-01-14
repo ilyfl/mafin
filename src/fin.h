@@ -41,8 +41,9 @@ typedef struct answer{
 	uint8_t typecome;
 	uint8_t category;
 	float payload;
-	char comment[54];
+	char comment[62];
 	uint8_t resource;
+	struct tm time;
 } answer_t;
 
 

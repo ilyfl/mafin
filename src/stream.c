@@ -47,21 +47,30 @@ uint8_t readdb(char* dbpath, answer_t* info)
 	{	
 		return 1;	
 	}	
+
+	
+
+//causes segmentation fault
+//
+	fscanf(db, "%02d-%02d-%d/%02d:%02d:%02d", info->time.tm_mday, info->time.tm_mon+1, info->time.tm_year+1900, info->time.tm_hour, info->time.tm_min, info->time.tm_sec);
+	fscanf(db, "%d,%d,%f,%s,%d\n",info->typecome, info->category, info->payload, info->comment, info->resource);
 	
 	fclose(db);
 	return 0;
 }
+
+//goes to the end of file and adds new info
 uint8_t storedb(answer_t* info, char* dbpath)
 {
 	FILE *db;
 	time_t t = time(NULL);
-	struct tm tm = *localtime(&t);
+	info->time = *localtime(&t);
 
 	if((db=fopen(dbpath, "a"))==NULL)
 	{	
 		return 1;	
 	}	
-	fprintf(db,"%02d-%02d-%d/%02d:%02d:%02d|",tm.tm_mday, tm.tm_mon+1, tm.tm_year+1900, tm.tm_hour, tm.tm_min, tm.tm_sec);	
+	fprintf(db,"%02d-%02d-%d/%02d:%02d:%02d|",info->time.tm_mday, info->time.tm_mon+1, info->time.tm_year+1900, info->time.tm_hour, info->time.tm_min, info->time.tm_sec);	
 	fprintf(db,"%d,%d,%f,%s,%d\n", info->typecome, info->category, info->payload, info->comment, info->resource);
 
 	fclose(db);
