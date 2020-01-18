@@ -1,5 +1,4 @@
 
-#pragma once
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,6 +7,8 @@
 #include <stdint.h>
 #include <time.h>
 #include <string.h>
+
+#pragma once
 
 #define PATH_MAX 128
 #define NAME_MAX 64
@@ -24,13 +25,6 @@ char dbpath[PATH_MAX];
 
 void mysql_create(const char * dbname);
 
-void get_digit(uint8_t *digit);
-uint8_t get_str(char str[]);
-uint8_t get_float(float *number);
-uint8_t get_password(char* password);
-uint8_t get_name(char *name);
-uint8_t get_username(char **name);
-uint8_t read_config();
 
 //typedef struct user{
 //	char username[MAX_INP_LEN];
@@ -38,19 +32,16 @@ uint8_t read_config();
 //}user_t;
 
 typedef struct answer{
+	float payload;
 	uint8_t typecome;
 	uint8_t category;
-	float payload;
-	char comment[62];
 	uint8_t resource;
+	char comment[62];
 	struct tm time;
 } answer_t;
 
 
-uint8_t write_config(const char *left, const char* right);
-uint8_t read_config(const char *left, char* right);
-uint8_t readdb(FILE* dbfd, answer_t* info);
-uint8_t storedb(answer_t* info, char* dbpath);
+
 
 
 
