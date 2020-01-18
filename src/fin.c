@@ -1,9 +1,10 @@
 #include "fin.h"
+#include "stream.h"
+#include "misc.h"
 
 //TODO:
 //Sorting
 
-//currently writes on the first line only
 
 void print_categories(const uint8_t typecome){ char categories[2][CAT_MAX][NAME_MAX]={{"Food", "Eating", "Entertainment", "Transport", "Bills", "Clothes", "Health", "Phone", "Toiletry", "Other"},{"Salary", "Wages", "Random"}};
 	printf("==============================\n");
@@ -125,21 +126,14 @@ void init_env()
 			
 }
 
-void test(answer_t* info)
+void test(answer_t info)
 {
-	FILE *dbfd;
-	if((dbfd=fopen(dbpath, "r"))==NULL)
+	printf("%d", sizeof(answer_t));
+	while(!readdb(dbpath, &info))
 	{
-		fprintf(stderr,"An error while opening %s occured", dbpath);
-		exit(1);
+		printf("%02d-%02d-%d/%02d:%02d:%02d|",info.time.tm_mday, info.time.tm_mon+1, info.time.tm_year+1900, info.time.tm_hour, info.time.tm_min, info.time.tm_sec);	
+		printf("%d,%d,%f,%s,%d\n", info.typecome, info.category, info.payload, info.comment, info.resource);
 	}
-	while(!readdb(dbfd, info))
-	{
-		continue;
-	}	
-	
-	fclose(dbfd);
-	exit(0);
 }
 
 
@@ -153,8 +147,7 @@ int main(int argc, char** argv)
 	answer_t	info;
 
 	init_env();
-
-	test(&info);
+//	test(info);
 
 	if(prompt(&info))
 	{
@@ -169,7 +162,8 @@ int main(int argc, char** argv)
 
 	while(!readdb(dbpath, &info))
 	{
-		continue;
+		printf("%02d-%02d-%d/%02d:%02d:%02d|",info.time.tm_mday, info.time.tm_mon+1, info.time.tm_year+1900, info.time.tm_hour, info.time.tm_min, info.time.tm_sec);	
+		printf("%d,%d,%f,%s,%d\n", info.typecome, info.category, info.payload, info.comment, info.resource);
 	}
 
 	return 0;
