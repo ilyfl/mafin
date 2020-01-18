@@ -147,7 +147,7 @@ int main(int argc, char** argv)
 	answer_t	info;
 
 	init_env();
-//	test(info);
+	test(info);
 
 	if(prompt(&info))
 	{

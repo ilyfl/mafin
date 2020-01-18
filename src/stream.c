@@ -103,7 +103,7 @@ uint8_t readdb(char* dbpath, answer_t* info)
 	for(uint8_t i=0; i<strlen(infoline);++i){
 		if(isdigit(infoline[i]))
 		{
-			*uiptr=10*(*uiptr)+timeline[i]-'0';
+			*uiptr=10*(*uiptr)+infoline[i]-'0';
 			uiptr++;
 		}
 		else if(ispunct(infoline[i]))
@@ -133,7 +133,7 @@ uint8_t storedb(answer_t* info, char* dbpath)
 		return 1;	
 	}	
 	fprintf(db,"%02d-%02d-%d/%02d:%02d:%02d|",info->time.tm_mday, info->time.tm_mon+1, info->time.tm_year+1900, info->time.tm_hour, info->time.tm_min, info->time.tm_sec);	
-	fprintf(db,"%d,%d,%f,%d,%s\n", info->typecome, info->category, info->payload, info->resource, info->comment);
+	fprintf(db,"%d,%d,%d,%f,%s\n", info->typecome, info->category, info->resource, info->payload, info->comment);
 
 	fclose(db);
 	
