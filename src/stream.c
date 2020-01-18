@@ -40,22 +40,29 @@ uint8_t read_config(const char *s, char* var)
 	return 0;
 }
 
-uint8_t readdb(char* dbpath, answer_t* info)
+uint8_t readdb(FILE* dbfd, answer_t* info)
 {
-	FILE *db;
-	if((db=fopen(dbpath, "r"))==NULL)
-	{	
-		return 1;	
-	}	
+	char	timeline[21];
+	char 	infoline[sizeof(answer_t)];
+	uint8_t	i=0;	
+	int*	ptr = &(info->time.tm_mday);
+	if((fgets(timeline, sizeof(timeline), dbfd))==NULL)
+	{
+		return 1;
+	}
+	if((fgets(infoline, sizeof(infoline), dbfd))==NULL)
+	{
+		return 1;
+	}
 
-	
+	printf(timeline);	
+	printf(infoline);
 
-//causes segmentation fault
-//
-	fscanf(db, "%02d-%02d-%d/%02d:%02d:%02d", info->time.tm_mday, info->time.tm_mon+1, info->time.tm_year+1900, info->time.tm_hour, info->time.tm_min, info->time.tm_sec);
-	fscanf(db, "%d,%d,%f,%s,%d\n",info->typecome, info->category, info->payload, info->comment, info->resource);
+	printf("0x%x\n",ptr);	
+
+//	printf("\n%d,%d,%d\n", sizeof(info->time.tm_mday), sizeof(info->time.tm_mon), sizeof(info->time.tm_year));
+//	printf("\n%d,%d,%d\n", sizeof(info->time.tm_hour), sizeof(info->time.tm_min), sizeof(info->time.tm_sec));
 	
-	fclose(db);
 	return 0;
 }
 

@@ -1,10 +1,11 @@
 #include "fin.h"
 
+//TODO:
+//Sorting
 
 //currently writes on the first line only
 
-void print_categories(const uint8_t typecome){
-	char categories[2][CAT_MAX][NAME_MAX]={{"Food", "Eating", "Entertainment", "Transport", "Bills", "Clothes", "Health", "Phone", "Toiletry", "Other"},{"Salary", "Wages", "Random"}};
+void print_categories(const uint8_t typecome){ char categories[2][CAT_MAX][NAME_MAX]={{"Food", "Eating", "Entertainment", "Transport", "Bills", "Clothes", "Health", "Phone", "Toiletry", "Other"},{"Salary", "Wages", "Random"}};
 	printf("==============================\n");
 	for(uint8_t i = 0; i < CAT_MAX; ++i)
 		if(isalnum(categories[typecome][i][0]))
@@ -21,6 +22,11 @@ void print_resources(){
 	printf("==============================\n");
 }
 
+//prints main structure 
+void print_info(answer_t* info)
+{
+	
+}
 
 
 uint8_t prompt(answer_t* info){
@@ -121,14 +127,21 @@ void init_env()
 
 void test(answer_t* info)
 {
-//	printf("TM: %d\n",sizeof(struct tm));
-//	printf("info: %d\n",sizeof(answer_t));
+	FILE *dbfd;
+	if((dbfd=fopen(dbpath, "r"))==NULL)
+	{
+		fprintf(stderr,"An error while opening %s occured", dbpath);
+		exit(1);
+	}
+	while(!readdb(dbfd, info))
+	{
+		continue;
+	}	
 	
-	printf("%02d-%02d-%d/%02d:%02d:%02d|",info->time.tm_mday, info->time.tm_mon+1, info->time.tm_year+1900, info->time.tm_hour, info->time.tm_min, info->time.tm_sec);	
-	printf("%d,%d,%f,%s,%d\n", info->typecome, info->category, info->payload, info->comment, info->resource);
-
+	fclose(dbfd);
 	exit(0);
 }
+
 
 int main(int argc, char** argv)
 {
@@ -141,6 +154,8 @@ int main(int argc, char** argv)
 
 	init_env();
 
+	test(&info);
+
 	if(prompt(&info))
 	{
 		fprintf(stderr,"Something gone wrong, try again!\n");
@@ -152,12 +167,11 @@ int main(int argc, char** argv)
 		exit(1);
 	}
 
-	if(readdb(dbpath, &info))
+	while(!readdb(dbpath, &info))
 	{
-		exit(1);
+		continue;
 	}
 
-	test(&info);	
 	return 0;
 }
 
