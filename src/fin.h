@@ -13,8 +13,10 @@
 #define PATH_MAX 128
 #define NAME_MAX 64
 #define MIN_INP_LEN 3
-#define CAT_MAX 10 
+#define CAT_MAX 16 
 #define RES_NUM 3
+#define RES_MASK 7
+#define CAT_MASK 120
 
 //enum expense {Food, Eating, Entertainment, Transport, Bills, Clothes, Health, Phone, Toiletry, Other};
 //enum income {Salary, Wages, Random};
@@ -32,11 +34,9 @@ void mysql_create(const char * dbname);
 //}user_t;
 
 typedef struct answer{
+	char comment[64];
 	float payload;
-	uint8_t typecome;
-	uint8_t category;
-	uint8_t resource;
-	char comment[62];
+	int8_t tcr;
 	struct tm time;
 } answer_t;
 
