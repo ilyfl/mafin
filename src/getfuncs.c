@@ -34,11 +34,11 @@ uint8_t get_float(float *number){
 		return 1;
 }
 
-void get_digit(uint8_t* digit)
+void get_digit(uint8_t* digit, uint8_t left, uint8_t right)
 {
 	unsigned char c;
 	while(c=getchar())
-		if(isdigit(c))
+		if(isdigit(c)&&(((c-'0')>=left)&&((c-'0')<=right) ))
 			break;
 		else
 			continue;
