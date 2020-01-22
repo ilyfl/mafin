@@ -18,20 +18,10 @@
 #define RES_MASK 7
 #define CAT_MASK 120
 
-//enum expense {Food, Eating, Entertainment, Transport, Bills, Clothes, Health, Phone, Toiletry, Other};
-//enum income {Salary, Wages, Random};
-//enum res {Card, Cash, Credit};
-
 char cfgPath[PATH_MAX];
 char dbpath[PATH_MAX];
 
-void mysql_create(const char * dbname);
-
-
-//typedef struct user{
-//	char username[MAX_INP_LEN];
-//	char password[MAX_INP_LEN];	
-//}user_t;
+//void mysql_create(const char * dbname);
 
 typedef struct answer{
 	char comment[64];
