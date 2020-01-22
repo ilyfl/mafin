@@ -26,26 +26,30 @@ void print_resources(){
 //prints main structure 
 void print_info(answer_t* info)
 {
+	while(!readdb(dbpath, &info))
+	{
+		printf("%02d-%02d-%d/%02d:%02d:%02d|",info.time.tm_mday, info.time.tm_mon+1, info.time.tm_year+1900, info.time.tm_hour, info.time.tm_min, info.time.tm_sec);	
+		printf("%d,%f,%s\n", info.tcr, info.payload, info.comment);
+	}
 	
 }
 
 
 uint8_t prompt(answer_t* info){
-	uint8_t	mode;
-	printf("MODES:\nInput info(0)/Show totals(1)/History(2)?: ");
-	get_digit(&mode);
-	if(mode)
-	{
-		fprintf(stderr,"Not ready!\n");
-		return 1;
-	}
+	uint8_t tmp;
 	
 	printf("Outcome(0)/Income(1)?: ");	
-	get_digit(&(info->typecome));
+	get_digit(&tmp,0,1);
+	info->tcr=tmp;
 
-	print_categories(info->typecome);
+	print_categories(info->tcr);
 	printf("Select one by specifying its number: ");
-	get_digit(&(info->category));
+	if(tmp)
+		get_digit(&tmp,0,2);
+	else
+		get_digit(&tmp,0,9);
+	info->tcr <<= 4;
+	info->tcr |= tmp;
 
 	printf("Payload: ");
 	get_float(&(info->payload));
@@ -56,9 +60,14 @@ uint8_t prompt(answer_t* info){
 
 	print_resources();
 	printf("Resource: ");
+	get_digit(&tmp,0,2);
+	info->tcr <<=3;
+	info->tcr |=tmp;
 
-	get_digit(&(info->resource));
-
+	if(storedb(&info, dbpath))
+	{
+		return 1;
+	}
 	return 0;
 }
 
@@ -132,7 +141,7 @@ void test(answer_t info)
 	while(!readdb(dbpath, &info))
 	{
 		printf("%02d-%02d-%d/%02d:%02d:%02d|",info.time.tm_mday, info.time.tm_mon+1, info.time.tm_year+1900, info.time.tm_hour, info.time.tm_min, info.time.tm_sec);	
-		printf("%d,%d,%f,%s,%d\n", info.typecome, info.category, info.payload, info.comment, info.resource);
+		printf("%d,%f,%s\n", info.tcr, info.payload, info.comment);
 	}
 }
 
@@ -144,27 +153,29 @@ int main(int argc, char** argv)
 		printf("Wow you have specified an arguments, congrats!\n");
 	}
 
-	answer_t	info;
+	answer_t info;
+	uint8_t	mode;
 
 	init_env();
-	test(info);
-
-	if(prompt(&info))
+//	test(info);
+	printf("MODES:\nInput info(0)/Show totals(1)/History(2)?: ");
+	get_digit(&mode,0,2);
+	if(mode==1)
 	{
-		fprintf(stderr,"Something gone wrong, try again!\n");
-		exit(1);
+		fprintf(stderr,"Not ready!\n");
+		return 1;
+	}
+	else if(mode=2)
+		print_info(info);
+	else
+	{
+		if(prompt(&info))
+		{
+			fprintf(stderr,"Something gone wrong, try again!\n");
+			exit(1);
+		}
 	}
 
-	if(storedb(&info, dbpath))
-	{
-		exit(1);
-	}
-
-	while(!readdb(dbpath, &info))
-	{
-		printf("%02d-%02d-%d/%02d:%02d:%02d|",info.time.tm_mday, info.time.tm_mon+1, info.time.tm_year+1900, info.time.tm_hour, info.time.tm_min, info.time.tm_sec);	
-		printf("%d,%d,%f,%s,%d\n", info.typecome, info.category, info.payload, info.comment, info.resource);
-	}
 
 	return 0;
 }
