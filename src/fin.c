@@ -39,11 +39,13 @@ void print_info()
 			printf("Income by ");
 		printf("%s ",category[(uint8_t)info.tcr>>7][(info.tcr&120)>>3]); 		
 		printf("%.2f, res: ", info.payload);	
-		printf("%s, ",resource[info.tcr&7]);
+		printf("%s",resource[info.tcr&7]);
 		if(info.comment[0]!='\0')
 		{
-			printf("Comment: %s\n", info.comment);
+			printf(", Comment: %s\n", info.comment);
 		}
+		else 
+			printf("\n");
 	}
 	
 }
