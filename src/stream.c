@@ -45,7 +45,7 @@ uint8_t read_config(const char *s, char* var)
 
 uint8_t readdb(char* dbpath, answer_t* info)
 {
-	char	timeline[21];
+	char	timeline[20];
 	char 	infoline[sizeof(answer_t)];
 	FILE* dbfd;
 	static long pos;
@@ -83,14 +83,6 @@ uint8_t readdb(char* dbpath, answer_t* info)
 			continue;
 	}	
 
-		
-	//standardizing
-	info->time.tm_mon-=1;
-	info->time.tm_year-=1900;
-
-//not working properly	
-//need string to float converter 
-
 	//initializing by zeros
 	char* cptr=&info->comment;
 	memset(cptr, 0, 64);
@@ -112,10 +104,9 @@ uint8_t readdb(char* dbpath, answer_t* info)
 			info->payload=10*info->payload+infoline[i]-'0';
 			++i;	
 		}
-		while(isalnum(infoline[i])&& flag==2)
+		while((isalnum(infoline[i])||isblank(infoline[i])) && flag==2)
 		{
-			*cptr++=infoline[i];	
-			++i;
+			*cptr++=infoline[i++];	
 		}
 		if(infoline[i]=='.')
 		{
@@ -156,8 +147,8 @@ uint8_t storedb(answer_t* info, char* dbpath)
 	{	
 		return 1;	
 	}	
-	fprintf(db,"%02d-%02d-%02d/%02d:%02d:%d|",info->time.tm_sec, info->time.tm_min, info->time.tm_hour, info->time.tm_mday, info->time.tm_mon, info->time.tm_year);	
-	fprintf(db,"%d,%.2f,%s\n",info->tcr, roundf(info->payload), info->comment);
+	fprintf(db,"%02d-%02d-%02d-%02d-%02d-%d|",info->time.tm_sec, info->time.tm_min, info->time.tm_hour, info->time.tm_mday, info->time.tm_mon, info->time.tm_year);	
+	fprintf(db,"%d,%.2f,%s\n",info->tcr, info->payload, info->comment);
 
 	fclose(db);
 	

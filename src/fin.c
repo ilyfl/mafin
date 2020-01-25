@@ -5,31 +5,45 @@
 //TODO:
 //Sorting
 
+char category[2][CAT_MAX][NAME_MAX]={{"Food", "Eating", "Entertainment", "Transport", "Bills", "Clothes", "Health", "Phone", "Toiletry", "Other"},{"Salary", "Wages", "Random"}};
+char resource[RES_NUM][NAME_MAX]={"Cash", "Card", "Credit"};
 
-void print_categories(const uint8_t typecome){ char categories[2][CAT_MAX][NAME_MAX]={{"Food", "Eating", "Entertainment", "Transport", "Bills", "Clothes", "Health", "Phone", "Toiletry", "Other"},{"Salary", "Wages", "Random"}};
+void print_categories(const uint8_t typecome){
 	printf("==============================\n");
 	for(uint8_t i = 0; i < CAT_MAX; ++i)
-		if(isalnum(categories[typecome][i][0]))
-			printf("%s(%d)\n", categories[typecome][i], i);
+		if(isalnum(category[typecome][i][0]))
+			printf("%s(%d)\n", category[typecome][i], i);
 		else break;
 	printf("==============================\n");
 }
 
 void print_resources(){
-	char resources[RES_NUM][NAME_MAX]={"Cash", "Card", "Credit"};
 	printf("==============================\n");
 	for(uint8_t i=0; i<RES_NUM; ++i)
-		printf("%s(%d)\n", resources[i], i);
+		printf("%s(%d)\n", resource[i], i);
 	printf("==============================\n");
 }
 
 //prints main structure 
-void print_info(answer_t* info)
+void print_info()
 {
+	answer_t info;
 	while(!readdb(dbpath, &info))
 	{
-		printf("%02d-%02d-%d/%02d:%02d:%02d|",info.time.tm_mday, info.time.tm_mon+1, info.time.tm_year+1900, info.time.tm_hour, info.time.tm_min, info.time.tm_sec);	
-		printf("%d,%f,%s\n", info.tcr, info.payload, info.comment);
+
+		printf("%02d/%02d/%d|%02d:%02d:%02d| ",info.time.tm_mday, info.time.tm_mon+1, info.time.tm_year+1900, info.time.tm_hour, info.time.tm_min, info.time.tm_sec);	
+
+		if(info.tcr>=0)
+			printf("Expense on ");
+		else
+			printf("Income by ");
+		printf("%s ",category[(uint8_t)info.tcr>>7][(info.tcr&120)>>3]); 		
+		printf("%.2f, res: ", info.payload);	
+		printf("%s, ",resource[info.tcr&7]);
+		if(info.comment[0]!='\0')
+		{
+			printf("Comment: %s\n", info.comment);
+		}
 	}
 	
 }
@@ -64,7 +78,7 @@ uint8_t prompt(answer_t* info){
 	info->tcr <<=3;
 	info->tcr |=tmp;
 
-	if(storedb(&info, dbpath))
+	if(storedb(info, dbpath))
 	{
 		return 1;
 	}
@@ -165,8 +179,8 @@ int main(int argc, char** argv)
 		fprintf(stderr,"Not ready!\n");
 		return 1;
 	}
-	else if(mode=2)
-		print_info(info);
+	else if(mode==2)
+		print_info();
 	else
 	{
 		if(prompt(&info))
