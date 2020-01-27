@@ -266,7 +266,7 @@ int main(int argc, char** argv)
 					break;
 				case 'h':
 				case '?':
-					printf("Usage: fin [-i -x -c <digit> -m <comment> -r <digit> -p <float number>]\nFlags:\n\t-i - sets income flag\n\t-x - sets expense flag\n\t-m <comment> - action comment\n\t-r <digit> - specifies resource\n\t-c <digit> - specifies category\n\t-p <float number> - specifies payload  \n");
+					printf("Usage: fin [-s -l <number> ] [-i -x -c <digit> -m <comment> -r <digit> -p <float number>]\nFlags:\n\t-s - show history\n\t-l <number> - last <number> entries\n\t-i - sets income flag\n\t-x - sets expense flag\n\t-m <comment> - action comment\n\t-r <digit> - specifies resource\n\t-c <digit> - specifies category\n\t-p <float number> - specifies payload  \n");
 				default:
 					exit(1);
 
@@ -291,7 +291,7 @@ int main(int argc, char** argv)
 		exit(0);
 	}
 	if(argc>1){
-		printf("Usage: fin [-i -x -c <digit> -m <comment> -r <digit> -p <float number>]\nFlags:\n\t-i - sets income flag\n\t-x - sets expense flag\n\t-m <comment> - action comment\n\t-r <digit> - specifies resource\n\t-c <digit> - specifies category\n\t-p <float number> - specifies payload  \n");
+		printf("Usage: fin [-s -l <number> ] [-i -x -c <digit> -m <comment> -r <digit> -p <float number>]\nFlags:\n\t-s - show history\n\t-l <number> - last <number> entries\n\t-i - sets income flag\n\t-x - sets expense flag\n\t-m <comment> - action comment\n\t-r <digit> - specifies resource\n\t-c <digit> - specifies category\n\t-p <float number> - specifies payload  \n");
 		exit(1);
 	}
 
