@@ -49,7 +49,6 @@ uint8_t readdb(char* dbpath, answer_t* info)
 	char 	infoline[sizeof(answer_t)];
 	FILE* dbfd;
 	static long pos;
-	
 
 	if((dbfd=fopen(dbpath, "r"))==NULL)
 	{
@@ -61,10 +60,12 @@ uint8_t readdb(char* dbpath, answer_t* info)
 			
 	if((fgets(timeline, sizeof(timeline), dbfd))==NULL)
 	{
+		fclose(dbfd);
 		return 1;
 	}
 	if((fgets(infoline, sizeof(infoline), dbfd))==NULL)
 	{
+		fclose(dbfd);
 		return 1;
 	}
 	pos=ftell(dbfd);
@@ -130,7 +131,6 @@ uint8_t readdb(char* dbpath, answer_t* info)
 		info->payload*=0.1;
 		++e;
 	}
-	roundf(info->payload);
 	
 	fclose(dbfd);
 	return 0;
