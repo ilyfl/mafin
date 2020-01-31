@@ -1,11 +1,11 @@
 #include "fin.h"
 
-uint8_t get_str(char str[])
+uint8_t get_str(FILE* stream, char str[])
 {
-	char c=getchar();
+	char c=fgetc(stream);
 	uint8_t i=0;
 	do {
-		if(c=='\n')
+		if(c=='\n' || c=='\0' || c==EOF)
 		{
 			return 1;
 		}
@@ -14,19 +14,17 @@ uint8_t get_str(char str[])
 			str[i]=c;	
 		}
 		++i;
-	} while((c=getchar())!='\n');
+	} while((c=fgetc(stream))!='\n' && c!='\0' && c!=EOF);
 	str[i]='\0';
 	return 0;
 }
 
-uint8_t get_float(float *number){
+uint8_t get_float(FILE* stream,float *number){
 	char buffer[64];
     	char *endptr;
-	while(get_str(buffer))
+	while(get_str(stream,buffer))
 		;
-	
-   	//if (fgets(buffer, sizeof(buffer), stdin) == NULL)
-   	//    	return 1; /* Unexpected error */
+
    	*number = strtof(buffer, &endptr);
    	if ((*endptr == '\0') || (isspace(*endptr) != 0))
    	    	return 0;
@@ -34,11 +32,11 @@ uint8_t get_float(float *number){
 		return 1;
 }
 
-void get_digit(uint8_t* digit, uint8_t left, uint8_t right)
+void get_digit(FILE* stream, uint8_t* digit, uint8_t left, uint8_t right)
 {
 	unsigned char c;
-	while(c=getchar())
-		if(isdigit(c)&&(((c-'0')>=left)&&((c-'0')<=right) ))
+	while(c=fgetc(stream))
+		if(isdigit(c) && within(c-'0',left,right))
 			break;
 		else
 			continue;
