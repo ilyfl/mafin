@@ -20,55 +20,56 @@ uint8_t write_config(const char *s, const char* var)
 	return 0;
 }
 
-uint8_t read_config(const char *s, char* var)
+uint8_t read_config(FILE* configfd, const char *s, char* var)
 {
-	FILE* config;
+	char line[PATH_MAX];
+	static long pos;
+	uint8_t flag=0;
+	size_t j=0;
 
-	if ((config=fopen(cfgPath,"r"))==NULL)
-	{
+	if(pos)
+		fseek(configfd, pos, SEEK_SET);
+	if((fgets(line, sizeof(line), configfd))==NULL)
 		return 1;
-	}
-	
-
-	char format[16]="";
-	strcat(format, s);
-	strcat(format, "=%s");
-	if(fscanf(config, format, var)!=1)
+	pos=ftell(configfd);
+	if(line[0]=='#')
+		return 1;
+	for(size_t i=0; i<sizeof(line); ++i)
 	{
-		fclose(config);
-		return 10;
+		if(isblank(line[i]))
+			continue;
+		else if(!flag && line[i]=='=')
+			flag=1;
+		else if(!flag && line[i]==*s++)
+			continue;
+		else if(flag && isprint(line[i]))
+			var[j++]=line[i];
+		else{
+			var[j]='\0';
+			return !flag;
+		}
 	}
-
-	fclose(config);
 	return 0;
 }
 
-uint8_t readdb(char* dbpath, answer_t* info)
+//2 or 3 times faster 
+uint8_t readdb(FILE* dbfd, answer_t* info, long* pos)
 {
 	char	timeline[20];
 	char 	infoline[sizeof(answer_t)];
-	FILE* dbfd;
-	static long pos;
 
-	if((dbfd=fopen(dbpath, "r"))==NULL)
-	{
-		return 1;
-	}
-
-	if(pos)
-		fseek(dbfd, pos, SEEK_SET);
+	if(*pos)
+		fseek(dbfd, *pos, SEEK_SET);
 			
 	if((fgets(timeline, sizeof(timeline), dbfd))==NULL)
 	{
-		fclose(dbfd);
 		return 1;
 	}
 	if((fgets(infoline, sizeof(infoline), dbfd))==NULL)
 	{
-		fclose(dbfd);
 		return 1;
 	}
-	pos=ftell(dbfd);
+	*pos=ftell(dbfd);
 	
 	//init info->time struct's elements with zeros
 	int* ptr = &info->time.tm_sec;
@@ -132,7 +133,6 @@ uint8_t readdb(char* dbpath, answer_t* info)
 		++e;
 	}
 	
-	fclose(dbfd);
 	return 0;
 }
 
