@@ -35,7 +35,7 @@ uint8_t get_float(FILE* stream,float *number){
 void get_digit(FILE* stream, uint8_t* digit, uint8_t left, uint8_t right)
 {
 	unsigned char c;
-	while(c=fgetc(stream))
+	while((c=fgetc(stream)))
 		if(isdigit(c) && within(c-'0',left,right))
 			break;
 		else

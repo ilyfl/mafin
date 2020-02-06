@@ -35,6 +35,7 @@ answer_t info;
 uint8_t prompt(answer_t* info);
 void print_categories(const uint8_t typecome);
 void print_resources();
+void print_last(uint32_t number);
 extern int parse_opts(int argc, char**argv);
 //void mysql_create(const char * dbname);
 
