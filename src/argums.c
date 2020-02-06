@@ -7,7 +7,7 @@ int show(int argc, char**argv);
 
 void usage(char** argv)
 {
-	printf("Usage: %s [ flags ] [ expression ]\nFlags:\n\t-i - interactive\n\t-s - show history\n\t-l <number> - last <number> entries\n\t-t <digit> - typecome (0-outcome, 1-income)\n\t-m <comment> - comment\n\t-r <digit> - specifies resource\n\t-c <digit> - specifies category\n\t-p <float number> - specifies payload\n\t-h - displays this message  \n", *argv);
+	printf("Usage: %s [ flags ] [ expression ]\nFlags:\n\t-i - interactive\n\t-s - show history\n\t-l <number> - last <number> entries\n\t-t <digit> - typecome (0-outcome, 1-income)\n\t-m <comment> - comment\n\t-r <digit> - specifies resource\n\t-c <digit> - specifies category\n\t-p <float number> - specifies payload\n\t-d <number> - deletes entry\n\t-h - displays this message  \n", *argv);
 	printf("OUTCOME Categories:\n");
 	print_categories(0);
 	printf("INCOME Categories:\n");
@@ -19,7 +19,7 @@ void usage(char** argv)
 int show(int argc, char**argv)
 {
 		char c;
-		c=getopt(argc, argv, "hisl:");
+		c=getopt(argc, argv, "hisl:d:");
 		switch(c)
 		{
 			case 'i':
@@ -28,6 +28,8 @@ int show(int argc, char**argv)
 			case 'l':
 				print_last(atoi(optarg));
 				return 0;	
+            case 'd':
+                return rmEntry_n(dbpath, atoi(optarg));
 			case 's':
 				//show_history();
 				return 0;
@@ -52,7 +54,7 @@ int parse_opts(int argc, char** argv)
 
 int fill(int argc, char** argv, answer_t* info){
 	uint8_t typecome,category,resource;
-	memset(info, 0, sizeof(info));
+	memset(info, 0, sizeof(*info));
 	char c;
 	while((c=getopt(argc, argv, "t:c:r:p:m:"))!=-1)
 	{

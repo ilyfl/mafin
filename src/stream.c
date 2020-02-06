@@ -34,6 +34,7 @@ uint8_t read_config(FILE* configfd, const char *s, char* var)
 	pos=ftell(configfd);
 	if(line[0]=='#')
 		return 1;
+    
 	for(size_t i=0; i<sizeof(line); ++i)
 	{
 		if(isblank(line[i]))
@@ -71,10 +72,11 @@ uint8_t readdb(FILE* dbfd, answer_t* info, long* pos)
 	}
 	*pos=ftell(dbfd);
 	
-	//init info->time struct's elements with zeros
-	int* ptr = &info->time.tm_sec;
-	memset(ptr, 0, sizeof(struct tm));
+	//init info struct's elements with zeros
+	memset(info, 0, sizeof(*info));
 
+	int* ptr = &info->time.tm_sec;
+	//time parser
 	for(uint8_t i=0; i<sizeof(timeline);++i)
 	{
 		if(isdigit(timeline[i]))
@@ -85,16 +87,12 @@ uint8_t readdb(FILE* dbfd, answer_t* info, long* pos)
 			continue;
 	}	
 
-	//initializing by zeros
 	char* cptr=&info->comment;
-	memset(cptr, 0, 64);
-	info->payload=0;
-	info->tcr=0;
 
 	int8_t flag=0;
 	int8_t a=1;
 	int8_t e=0;
-	//parser
+	//info parser
 	for(uint8_t i=0; i<strlen(infoline);++i){
 		while(isdigit(infoline[i]) && !flag)
 		{
@@ -154,3 +152,57 @@ uint8_t storedb(answer_t* info, char* dbpath)
 	
 	return 0;
 }
+
+
+uint8_t rmEntry_n(const char* dbpath, size_t number) 
+{
+    FILE *db;
+    char *buffer;
+    char *ptr;
+    size_t delete=1;
+    size_t remain=0;
+    size_t i=1;  
+    struct stat st;
+
+
+    if(stat(dbpath,&st))
+        return 1;
+    else if((db=fopen(dbpath, "r"))==NULL)
+		return 1;	
+    else if((buffer=malloc(st.st_size))==NULL)
+    {
+        fclose(db);
+        return 1;
+    }
+    else if((size_t)(fread(buffer, 1, st.st_size, db))!=(size_t)(st.st_size))
+    {
+        fclose(db);
+        return 1;
+    }
+    fclose(db);
+    
+
+    for(ptr=buffer; *ptr!=EOF; ++ptr)
+    {
+        if(i==number)
+        {
+           for(char *line = ptr; *line!='\n'; ++line)
+                ++delete;
+           break;
+        }
+        else if(*ptr == '\n') 
+            ++i;
+    }
+    remain=(buffer+st.st_size) - (ptr+delete);
+    
+    memmove(ptr, ptr+delete, remain); 
+
+    if((db=fopen(dbpath, "w"))==NULL)
+		return 1;	
+
+    fwrite(buffer, 1, st.st_size - delete, db);
+
+	fclose(db);
+    return 0;
+}
+

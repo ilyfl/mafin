@@ -10,9 +10,14 @@
 char category[2][CAT_MAX][NAME_MAX]={{"Food", "Eating", "Entertainment", "Transport", "Bills", "Clothes", "Health", "Phone", "Toiletry", "Other"},{"Salary", "Wages", "Random"}};
 char resource[RES_MAX][NAME_MAX]={"Cash", "Card", "Credit"};
 
-//uint8_t sort(FILE* dbfd, uint8_t type)
-//{
-//}
+uint8_t sort(FILE* dbfd, uint8_t type)
+{
+    return 0;
+}
+
+uint8_t show_history(){
+    return 0;
+}
 
 void print_categories(const uint8_t typecome){
 	for(uint8_t i = 0; i < CAT_MAX; ++i)
@@ -87,7 +92,7 @@ uint8_t prompt(answer_t* info){
 
 	printf("Comment(optional): ");
 	if(get_str(stdin,info->comment))
-		memset(info->comment, 0, 54);
+		memset(info->comment, 0, sizeof(info->comment));
 
 	print_resources();
 	printf("Resource: ");
@@ -155,16 +160,6 @@ void init_env()
 			
 }
 
-//void test(answer_t info)
-//{
-//	//printf("%d", sizeof(answer_t));
-//	while(!readdb(dbpath, &info))
-//	{
-//		printf("%02d-%02d-%d/%02d:%02d:%02d|",info.time.tm_mday, info.time.tm_mon+1, info.time.tm_year+1900, info.time.tm_hour, info.time.tm_min, info.time.tm_sec);	
-//		printf("%d,%f,%s\n", info.tcr, info.payload, info.comment);
-//	}
-//}
-
 void finish()
 {
 	printf("\n");
@@ -186,9 +181,6 @@ int main(int argc, char** argv)
 		{
 			return 1;
 		}
-
-
-
 	return 0;
 }
 
