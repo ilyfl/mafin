@@ -201,7 +201,7 @@ uint8_t rmEntry_n(const char* dbpath, size_t number)
 		return 1;	
 
     fwrite(buffer, 1, st.st_size - delete, db);
-
+    free(buffer);
 	fclose(db);
     return 0;
 }
