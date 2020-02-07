@@ -180,11 +180,15 @@ uint8_t rmEntry_n(const char* dbpath, size_t number)
         return 1;
     }
     fclose(db);
-    
 
-    for(ptr=buffer; *ptr!=EOF; ++ptr)
-    {
-        if(i==number)
+    ptr=buffer;
+    do{
+        if(ptr==buffer+st.st_size)
+        {
+            free(buffer);
+            return 1;
+        }
+        else if(i==number)
         {
            for(char *line = ptr; *line!='\n'; ++line)
                 ++delete;
@@ -192,7 +196,7 @@ uint8_t rmEntry_n(const char* dbpath, size_t number)
         }
         else if(*ptr == '\n') 
             ++i;
-    }
+    }while(ptr++);
     remain=(buffer+st.st_size) - (ptr+delete);
     
     memmove(ptr, ptr+delete, remain); 

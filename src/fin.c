@@ -172,6 +172,9 @@ int main(int argc, char** argv)
 
 	(void) signal(SIGINT,finish);
 
+    clock_t time;
+    time=clock();
+
 	init_env();
 	flag=parse_opts(argc,argv);
 	if(flag>0)
@@ -181,6 +184,10 @@ int main(int argc, char** argv)
 		{
 			return 1;
 		}
+
+    time=clock()-time;
+    printf("%lli\n", (long long)time);
+
 	return 0;
 }
 
