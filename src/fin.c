@@ -172,21 +172,25 @@ int main(int argc, char** argv)
 
 	(void) signal(SIGINT,finish);
 
-    clock_t time;
-    time=clock();
+    clock_t t;
+    t=clock();
 
 	init_env();
 	flag=parse_opts(argc,argv);
 	if(flag>0)
 		return 1;
 	else if(flag<0)
+    {
+        time_t t = time(NULL);
+        info.time = *localtime(&t);
 		if(storedb(&info, dbpath))
 		{
 			return 1;
 		}
+    }
 
-    time=clock()-time;
-    printf("%lli\n", (long long)time);
+    t=clock()-t;
+    printf("%lli\n", (long long)t);
 
 	return 0;
 }

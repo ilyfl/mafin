@@ -5,11 +5,13 @@
 #include <stdint.h>
 #include <time.h>
 #include <string.h>
+#include <sys/stat.h>
 
 #pragma once
 
 #define PATH_MAX 128
 #define NAME_MAX 64
+#define DBLINE_MAX 128
 #define MIN_INP_LEN 3
 #define CAT_MAX 16 
 #define RES_MAX 7

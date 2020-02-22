@@ -3,7 +3,7 @@
 
 #include "fin.h"
 #include "stream.h"
-#include "math.h"
+#include <math.h>
 
 
 //currently writes on the first line only
@@ -52,77 +52,72 @@ uint8_t read_config(FILE* configfd, const char *s, char* var)
 	}
 	return 0;
 }
-
-//2 or 3 times faster 
+//
 uint8_t readdb(FILE* dbfd, answer_t* info, long* pos)
 {
-	char	timeline[20];
-	char 	infoline[sizeof(answer_t)];
+	char* 	infoline=malloc(DBLINE_MAX);
+    char*   ptr=infoline;
+	char*   cptr=&info->comment;
+	int*    time_ptr = &info->time.tm_sec;
 
 	if(*pos)
 		fseek(dbfd, *pos, SEEK_SET);
 			
-	if((fgets(timeline, sizeof(timeline), dbfd))==NULL)
+	if((fgets(infoline, DBLINE_MAX, dbfd))==NULL)
 	{
+        free(infoline);
 		return 1;
 	}
-	if((fgets(infoline, sizeof(infoline), dbfd))==NULL)
-	{
-		return 1;
-	}
+
 	*pos=ftell(dbfd);
 	
-	//init info struct's elements with zeros
-	memset(info, 0, sizeof(*info));
+	//init answer_t struct's elements with zeros
+	memset(info, 0, sizeof(answer_t));
 
-	int* ptr = &info->time.tm_sec;
 	//time parser
-	for(uint8_t i=0; i<sizeof(timeline);++i)
-	{
-		if(isdigit(timeline[i]))
-			*ptr=10*(*ptr)+timeline[i]-'0';		
-		else if(ispunct(timeline[i]))
-			++ptr;
-		else
-			continue;
-	}	
+    do{
+		if(isdigit(*ptr))
+			*time_ptr=10*(*time_ptr)+*ptr-'0';		
+		else if(*ptr=='-')
+			++time_ptr;
+    }while(*ptr!='|' && *ptr++!='\n');
 
-	char* cptr=&info->comment;
 
 	int8_t flag=0;
 	int8_t a=1;
 	int8_t e=0;
 	//info parser
-	for(uint8_t i=0; i<strlen(infoline);++i){
-		while(isdigit(infoline[i]) && !flag)
+    
+	do{
+		while(isdigit(*ptr) && !flag)
 		{
-			info->tcr=10*info->tcr+infoline[i]-'0';
-			++i;
+			info->tcr=10*info->tcr+*ptr-'0';
+			++ptr;
 		}
-		while(isdigit(infoline[i]) && flag==1)
+		while(isdigit(*ptr) && flag==1)
 		{
-			info->payload=10*info->payload+infoline[i]-'0';
-			++i;	
+			info->payload=10*info->payload+*ptr-'0';
+			++ptr;	
 		}
-		while((isalnum(infoline[i])||isblank(infoline[i])) && flag==2)
+		while((isalnum(*ptr)||isblank(*ptr)) && flag==2)
 		{
-			*cptr++=infoline[i++];	
+			*cptr++=*ptr++;	
 		}
-		if(infoline[i]=='.')
+		if(*ptr=='.')
 		{
-			++i;
-			while(isdigit(infoline[i]))
+			++ptr;
+			while(isdigit(*ptr))
 			{
-				info->payload=10*info->payload+infoline[i]-'0';	
+				info->payload=10*info->payload+*ptr-'0';	
 				e-=1;
-				++i;
+				++ptr;
 			}
 		}
-		else if(infoline[i]=='-')
+		else if(*ptr=='-')
 			a=-1;
-		if(infoline[i]==',')
+		if(*ptr==',')
 			flag++;
-	}
+	}while(*ptr!='\n' && *ptr++!='\0');
 
 	info->tcr*=a;
 	while(e)
@@ -131,6 +126,7 @@ uint8_t readdb(FILE* dbfd, answer_t* info, long* pos)
 		++e;
 	}
 	
+    free(infoline);
 	return 0;
 }
 
@@ -138,13 +134,11 @@ uint8_t readdb(FILE* dbfd, answer_t* info, long* pos)
 uint8_t storedb(answer_t* info, char* dbpath)
 {
 	FILE *db;
-	time_t t = time(NULL);
-	info->time = *localtime(&t);
-
 	if((db=fopen(dbpath, "a"))==NULL)
 	{	
 		return 1;	
 	}	
+
 	fprintf(db,"%02d-%02d-%02d-%02d-%02d-%d|",info->time.tm_sec, info->time.tm_min, info->time.tm_hour, info->time.tm_mday, info->time.tm_mon, info->time.tm_year);	
 	fprintf(db,"%d,%.2f,%s\n",info->tcr, info->payload, info->comment);
 
@@ -153,6 +147,92 @@ uint8_t storedb(answer_t* info, char* dbpath)
 	return 0;
 }
 
+uint8_t chEntry_n(answer_t* info, char* dbpath, size_t number)
+{
+    if(rmEntry_n(dbpath, number))
+        return 1;
+    if(insEntry_n(info,dbpath,number))
+        return 1;
+    return 0;
+}
+
+uint8_t insEntry_n(answer_t* info,char* dbpath, size_t number) 
+{
+    FILE *db;
+    char *buffer;
+    char *ptr;
+    char *insLine[2*sizeof(*info)];
+    size_t lineSize=1;
+    size_t remain=0;
+    size_t i=1;  
+    struct stat st;
+
+    if(stat(dbpath,&st))
+        return 1;
+    else if((db=fopen(dbpath, "r"))==NULL)
+		return 1;	
+    else if((buffer=malloc(st.st_size))==NULL)
+    {
+        fclose(db);
+        return 1;
+    }
+    else if((size_t)(fread(buffer, 1, st.st_size, db))!=(size_t)(st.st_size))
+    {
+        fclose(db);
+        return 1;
+    }
+    fclose(db);
+
+    ptr=buffer;
+    do{
+        if(ptr==buffer+st.st_size)
+        {
+            time_t t = time(NULL);
+            info->time = *localtime(&t);
+            storedb(info, dbpath);
+            free(buffer);
+            return 0;
+        }
+        else if(i==(number))
+        {
+            for(char *line = ptr; *line!='\n'; ++line)
+                ++lineSize;
+            break;
+        }
+        else if(*ptr == '\n') 
+            ++i;
+    }while(ptr++);
+
+//char *insLine=malloc(2*sizeof(*info));
+    size_t insLineSize;
+    time_t t = time(NULL);
+    info->time = *localtime(&t);
+
+	sprintf(insLine,"%02d-%02d-%02d-%02d-%02d-%d|%d,%.2f,%s\n\0",info->time.tm_sec, info->time.tm_min, info->time.tm_hour, info->time.tm_mday, info->time.tm_mon, info->time.tm_year,info->tcr, info->payload, info->comment);	
+
+    insLineSize=strlen(insLine);
+    size_t pos=ptr-buffer;
+
+    st.st_size+= insLineSize;
+    remain=(buffer+st.st_size) - (ptr+lineSize);
+    buffer = realloc(buffer, st.st_size);
+    ptr=buffer+pos;
+    memmove(ptr+lineSize, ptr, remain); 
+
+    //insLine=realloc(insLineSize+1);
+	//sprintf(insLine,"%02d-%02d-%02d-%02d-%02d-%d|%d,%.2f,%s\n\0",info->time.tm_sec, info->time.tm_min, info->time.tm_hour, info->time.tm_mday, info->time.tm_mon, info->time.tm_year,info->tcr, info->payload, info->comment);	
+
+    memcpy(ptr, insLine, insLineSize);
+    //free(insLine);
+
+    if((db=fopen(dbpath, "w"))==NULL)
+		return 1;	
+
+    fwrite(buffer, 1, st.st_size , db);
+    free(buffer);
+	fclose(db);
+    return 0;
+}
 
 uint8_t rmEntry_n(const char* dbpath, size_t number) 
 {

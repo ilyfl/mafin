@@ -1,4 +1,5 @@
 #include "fin.h"
+#include "stream.h"
 #include <getopt.h>
 
 void usage(char**argv);
@@ -54,9 +55,11 @@ int parse_opts(int argc, char** argv)
 
 int fill(int argc, char** argv, answer_t* info){
 	uint8_t typecome,category,resource;
+    size_t insNum=0;
+    size_t chNum=0;
 	memset(info, 0, sizeof(*info));
 	char c;
-	while((c=getopt(argc, argv, "t:c:r:p:m:"))!=-1)
+	while((c=getopt(argc, argv, "i:t:c:r:p:m:g:"))!=-1)
 	{
 		switch(c)
 		{
@@ -85,10 +88,28 @@ int fill(int argc, char** argv, answer_t* info){
 			case 'm':
 				strcpy(info->comment,optarg);
 				break;
+			case 'i':
+                insNum=atoi(optarg);
+				break;
+			case 'g':
+                chNum=atoi(optarg);
+				break;
 			case '?':default:
 				usage(argv);
 				return 1;
 		}
 	}
+    if(chNum)
+    {
+        if(chEntry_n(info, dbpath, chNum))
+            return 1;
+        return 0;
+    }
+    if(insNum)
+    {
+        if(insEntry_n(info, dbpath, insNum))
+            return 1;
+        return 0;
+    }
 	return -1;
 }
