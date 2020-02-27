@@ -20,10 +20,10 @@ uint8_t write_config(const char *s, const char* var)
 	return 0;
 }
 
-uint8_t read_config(FILE* configfd, const char *s, char* var)
+uint8_t read_config(FILE* configfd, const char *s, char* var, size_t *pos)
 {
 	char line[PATH_MAX];
-	static long pos;
+    char *comment;
 	uint8_t flag=0;
 	size_t j=0;
 
@@ -32,7 +32,9 @@ uint8_t read_config(FILE* configfd, const char *s, char* var)
 	if((fgets(line, sizeof(line), configfd))==NULL)
 		return 1;
 	pos=ftell(configfd);
-	if(line[0]=='#')
+    
+    comment=strchr(line,'#');
+	if((comment!=NULL )&& *(comment)=='#')
 		return 1;
     
 	for(size_t i=0; i<sizeof(line); ++i)
@@ -57,7 +59,7 @@ uint8_t readdb(FILE* dbfd, answer_t* info, long* pos)
 {
 	char* 	infoline=malloc(DBLINE_MAX);
     char*   ptr=infoline;
-	char*   cptr=&info->comment;
+	char*   cptr=info->comment;
 	int*    time_ptr = &info->time.tm_sec;
 
 	if(*pos)
@@ -161,7 +163,7 @@ uint8_t insEntry_n(answer_t* info,char* dbpath, size_t number)
     FILE *db;
     char *buffer;
     char *ptr;
-    char *insLine[2*sizeof(*info)];
+    char insLine[2*sizeof(*info)];
     size_t lineSize=1;
     size_t remain=0;
     size_t i=1;  
@@ -208,7 +210,7 @@ uint8_t insEntry_n(answer_t* info,char* dbpath, size_t number)
     time_t t = time(NULL);
     info->time = *localtime(&t);
 
-	sprintf(insLine,"%02d-%02d-%02d-%02d-%02d-%d|%d,%.2f,%s\n\0",info->time.tm_sec, info->time.tm_min, info->time.tm_hour, info->time.tm_mday, info->time.tm_mon, info->time.tm_year,info->tcr, info->payload, info->comment);	
+	sprintf(insLine,"%02d-%02d-%02d-%02d-%02d-%d|%d,%.2f,%s\n",info->time.tm_sec, info->time.tm_min, info->time.tm_hour, info->time.tm_mday, info->time.tm_mon, info->time.tm_year,info->tcr, info->payload, info->comment);	
 
     insLineSize=strlen(insLine);
     size_t pos=ptr-buffer;
@@ -219,11 +221,7 @@ uint8_t insEntry_n(answer_t* info,char* dbpath, size_t number)
     ptr=buffer+pos;
     memmove(ptr+lineSize, ptr, remain); 
 
-    //insLine=realloc(insLineSize+1);
-	//sprintf(insLine,"%02d-%02d-%02d-%02d-%02d-%d|%d,%.2f,%s\n\0",info->time.tm_sec, info->time.tm_min, info->time.tm_hour, info->time.tm_mday, info->time.tm_mon, info->time.tm_year,info->tcr, info->payload, info->comment);	
-
     memcpy(ptr, insLine, insLineSize);
-    //free(insLine);
 
     if((db=fopen(dbpath, "w"))==NULL)
 		return 1;	

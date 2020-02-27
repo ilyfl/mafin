@@ -3,6 +3,8 @@
 #include <ctype.h>
 #include <mysql/mysql.h>
 #include <stdint.h>
+#include <unistd.h>
+#include <sys/types.h>
 #include <time.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -25,7 +27,7 @@
 typedef struct answer{
 	char comment[64];
 	float payload;
-	int8_t tcr;
+    int8_t tcr;    
 	struct tm time;
 } answer_t;
 
@@ -38,6 +40,7 @@ uint8_t prompt(answer_t* info);
 void print_categories(const uint8_t typecome);
 void print_resources();
 void print_last(uint32_t number);
+uint8_t show_history();
 extern int parse_opts(int argc, char**argv);
 //void mysql_create(const char * dbname);
 

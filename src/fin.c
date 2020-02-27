@@ -16,6 +16,38 @@ uint8_t sort(FILE* dbfd, uint8_t type)
 }
 
 uint8_t show_history(){
+    FILE* dbfd;
+    answer_t info;
+    size_t i=1;
+    size_t pos=0;
+
+    if((dbfd=fopen(dbpath, "r"))==NULL)
+    {
+		fprintf(stderr, "Error occured while opening a file\n");
+		return 1;	
+    }
+    
+
+
+    while(!readdb(dbfd, &info, &pos)){
+		printf("%d. ", i++);
+		printf("%02d/%02d/%d|%02d:%02d:%02d| ",info.time.tm_mday, info.time.tm_mon+1, info.time.tm_year+1900, info.time.tm_hour, info.time.tm_min, info.time.tm_sec);	
+
+		if(info.tcr>=0)
+			printf("Expense on ");
+		else
+			printf("Income by ");
+		printf("%s ",category[(uint8_t)info.tcr>>7][(info.tcr&120)>>3]); 		
+		printf("%.2f, res: ", info.payload);	
+		printf("%s",resource[info.tcr&7]);
+		if(info.comment[0]!='\0')
+		{
+			printf(", Comment: %s\n", info.comment);
+		}
+		else 
+			printf("\n");
+	}
+
     return 0;
 }
 
@@ -119,9 +151,9 @@ void init_env()
 	strcat(cfgPath, *username);
 	strcat(cfgPath, "/.config/mafin/config");
 
-	strcpy(dbpath,"/home/");	
-	strcat(dbpath, *username);
-	strcat(dbpath, "/mafin/finances");
+	//strcpy(dbpath,"/home/");	
+	//strcat(dbpath, *username);
+	//strcat(dbpath, "/mafin/finances");
 
 //reading config file
 	if((tmp=fopen(cfgPath, "r"))==NULL)	
@@ -129,10 +161,18 @@ void init_env()
 		fprintf(stderr,"Couldn't open config file\n");
 		exit(1);
 	}
-	
-	while(read_config(tmp, "dbpath", dbpath));
+    
+    char temp1[RES_MAX*NAME_MAX];   
+    char temp2[CAT_MAX*NAME_MAX]; 
+    size_t pos=0; 
+	while(read_config(tmp, "dbpath", dbpath, &pos));
+    pos=0;
+	while(read_config(tmp, "resources", temp1,&pos));
+    pos=0;
+	while(read_config(tmp, "categories", temp2,&pos));
+    pos=0;
 	fclose(tmp);
-
+    printf("res: %s\ncat:%s\n", temp1,temp2);
 	if((tmp=fopen(dbpath, "r"))==NULL)
 	{
 		fprintf(stderr,"Database specified is not created!\n");

@@ -8,7 +8,7 @@ int show(int argc, char**argv);
 
 void usage(char** argv)
 {
-	printf("Usage: %s [ flags ] [ expression ]\nFlags:\n\t-i - interactive\n\t-s - show history\n\t-l <number> - last <number> entries\n\t-t <digit> - typecome (0-outcome, 1-income)\n\t-m <comment> - comment\n\t-r <digit> - specifies resource\n\t-c <digit> - specifies category\n\t-p <float number> - specifies payload\n\t-d <number> - deletes entry\n\t-h - displays this message  \n", *argv);
+	printf("Usage: %s [ flags ] [ expression ]\nFlags:\n\t-i - interactive\n\t-s - show history\n\t-l <number> - last <number> entries\n\t-t <digit> - typecome (0-outcome, 1-income)\n\t-m <comment> - comment\n\t-r <digit> - specifies resource\n\t-c <digit> - specifies category\n\t-p <float number> - specifies payload\n\t-i <number> - inserts entry\n\t-g <number> - changes entry\n\t-d <number> - deletes entry\n\t-h - displays this message  \n", *argv);
 	printf("OUTCOME Categories:\n");
 	print_categories(0);
 	printf("INCOME Categories:\n");
@@ -32,8 +32,7 @@ int show(int argc, char**argv)
             case 'd':
                 return rmEntry_n(dbpath, atoi(optarg));
 			case 's':
-				//show_history();
-				return 0;
+				return show_history();
 			case 'h':case '?':default:
 				usage(argv);
 				return 1;
