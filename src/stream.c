@@ -19,40 +19,196 @@ uint8_t write_config(const char *s, const char* var)
 	fclose(config);
 	return 0;
 }
-
-uint8_t read_config(FILE* configfd, const char *s, char* var, size_t *pos)
+char *trimwhitespace(char *str)
 {
-	char line[PATH_MAX];
-    char *comment;
-	uint8_t flag=0;
-	size_t j=0;
+  char *end;
 
-	if(pos)
-		fseek(configfd, pos, SEEK_SET);
-	if((fgets(line, sizeof(line), configfd))==NULL)
-		return 1;
-	pos=ftell(configfd);
+  // Trim leading space
+  while(isspace((unsigned char)*str)) str++;
+
+  if(*str == 0)  // All spaces?
+    return str;
+
+  // Trim trailing space
+  end = str + strlen(str) - 1;
+  while(end > str && isspace((unsigned char)*end)) end--;
+
+  // Write new null terminator character
+  end[1] = '\0';
+
+  return str;
+}
+
+//reads config file and sets all needed global vars
+void co_assign(char* var, char* value)
+{
+    //divide value by separator ',' and assign tokens into array
+    char* token=strtok(value, ",");
+    int i = 0;
+    while(token!=NULL)
+    {
+        token=trimwhitespace(token);
+        strcpy((var+NAME_MAX*(i++)),token);
+        token = strtok(NULL, ",");
+    }
+
+}
+
+conf_t* read_config()
+{
+    FILE *config;
+    char *buffer;
+    char *token;
+    char *ptr;
+    struct stat st;
+
+    conf_t* options=malloc(sizeof(conf_t));
+    conf_t* head=options;
+    options->next=NULL;
+
+    if(stat(cfgPath,&st))
+        return NULL;
+    else if((config=fopen(cfgPath, "r"))==NULL)
+		return NULL;	
+    else if((buffer=malloc(st.st_size))==NULL)
+    {
+        fclose(config);
+        return NULL;
+    }
+    else if((size_t)(fread(buffer, 1, st.st_size, config))!=(size_t)(st.st_size))
+    {
+        fclose(config);
+        return NULL;
+    }
+    fclose(config);
+
+    ptr=buffer;
+
+    while(*ptr!='\0')
+    {
+        if((*ptr=='#'))
+        {
+            while(*ptr!='\n' && *ptr != '\0')
+                ptr++;
+        }
+        else
+        {
+            token = ptr;
+            while(*ptr != '\n' && *ptr != '\0')
+            {
+                if(*ptr=='=')
+                {
+                    // left side found
+                    char *tmp=ptr;
+                    if(options->next!=NULL)
+                        options=options->next;
+                    options->key=malloc(ptr-token);
+                    strncpy(options->key, token, ptr-token);
+                    *(options->key+(ptr-token))='\0';
+                    options->key=trimwhitespace(options->key);
+                    //right side
+                    token = ptr+1;
+                    if((tmp=strchr(ptr, '\n'))!=NULL); 
+                    else tmp=strchr(ptr,'\0');
+                    options->value = malloc(tmp-token);
+                    strncpy(options->value, token, tmp-token);
+                    *(options->value+(tmp-token))='\0';
+                    options->value=trimwhitespace(options->value);
+
+                    options->next=malloc(sizeof(conf_t));
+                }
+                ptr++;
+            }
+        }
+        ptr++;
+    }
+    options->next=NULL;
+	return head;
+    /* 
+
+    do{
+       comment=strchr(ptr++,'#');
+       if(!strncmp(ptr, global[i], strlen(global[i])))
+       {
+           //expect "=" and values;
+           ptr=strchr(ptr,'=');
+           if(*ptr++=='=')
+           {
+               token=strtok(ptr, ",");
+               for(int j=0; token; j++)
+               {
+                   ptr=strchr(token, '\n'); 
+                   if(ptr!=NULL)
+                       token=strtok(NULL, "\n");
+                   if(i==0)
+                   {
+                       token=trimwhitespace(token); 
+                       strcpy(category[0][j], token);
+                   } 
+                   else if(i==1)
+                   {
+                       token=trimwhitespace(token); 
+                       strcpy(category[1][j], token);
+                   } 
+                   else if(i==2)
+                   {
+                       token=trimwhitespace(token); 
+                       strcpy(resource[j], token);
+                   } 
+                   else if(i==3)
+                   {
+                       token=trimwhitespace(token); 
+                       strcpy(dbpath, token);
+                   } 
+                   token=strtok(NULL, ",");
+               }
+           }
+           ++i;
+           ptr=buffer;
+       }
+       if((comment!=NULL )&& *(comment)=='#')
+       {
+           while(*ptr++!='\n');
+           continue;
+       }
+    }while(i<3 && *ptr);
+   */ 
     
-    comment=strchr(line,'#');
-	if((comment!=NULL )&& *(comment)=='#')
-		return 1;
-    
-	for(size_t i=0; i<sizeof(line); ++i)
-	{
-		if(isblank(line[i]))
-			continue;
-		else if(!flag && line[i]=='=')
-			flag=1;
-		else if(!flag && line[i]==*s++)
-			continue;
-		else if(flag && isprint(line[i]))
-			var[j++]=line[i];
-		else{
-			var[j]='\0';
-			return !flag;
-		}
-	}
-	return 0;
+	//if((fgets(line, sizeof(line), configfd))==NULL)
+	//	return 1;
+	//*pos=(size_t)ftell(configfd);
+    //
+    //comment=strchr(line,'#');
+	//if((comment!=NULL )&& *(comment)=='#')
+	//	return 1;
+
+	//if(*pos)
+	//	fseek(configfd, *pos, SEEK_SET);
+    //else
+	//	fseek(configfd, *pos, SEEK_SET);
+	//if((fgets(line, sizeof(line), configfd))==NULL)
+	//	return 1;
+	//*pos=(size_t)ftell(configfd);
+    //
+    //comment=strchr(line,'#');
+	//if((comment!=NULL )&& *(comment)=='#')
+	//	return 1;
+    //
+	//for(size_t i=0; i<sizeof(line); ++i)
+	//{
+	//	if(isblank(line[i]))
+	//		continue;
+	//	else if(!flag && line[i]=='=')
+	//		flag=1;
+	//	else if(!flag && line[i]==*s++)
+	//		continue;
+	//	else if(flag && isprint(line[i]))
+	//		var[j++]=line[i];
+	//	else{
+	//		var[j]='\0';
+	//		return !flag;
+	//	}
+	//}
 }
 //
 uint8_t readdb(FILE* dbfd, answer_t* info, long* pos)

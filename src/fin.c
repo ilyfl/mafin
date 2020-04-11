@@ -7,8 +7,6 @@
 //Sorting
 
 
-char category[2][CAT_MAX][NAME_MAX]={{"Food", "Eating", "Entertainment", "Transport", "Bills", "Clothes", "Health", "Phone", "Toiletry", "Other"},{"Salary", "Wages", "Random"}};
-char resource[RES_MAX][NAME_MAX]={"Cash", "Card", "Credit"};
 
 uint8_t sort(FILE* dbfd, uint8_t type)
 {
@@ -138,8 +136,8 @@ void init_env()
 {
 	char* 	username[NAME_MAX];
 	char 	command[PATH_MAX];
-	FILE* tmp;
-
+	FILE*   tmp;
+    conf_t* options;
 	if(get_username(username))
 	{
 		fprintf(stderr,"Username is not defined!\n");
@@ -151,53 +149,41 @@ void init_env()
 	strcat(cfgPath, *username);
 	strcat(cfgPath, "/.config/mafin/config");
 
-	//strcpy(dbpath,"/home/");	
-	//strcat(dbpath, *username);
-	//strcat(dbpath, "/mafin/finances");
+	strcpy(dbpath,"/home/");	
+	strcat(dbpath, *username);
+	strcat(dbpath, "/mafin/finances.db");
 
-//reading config file
-	if((tmp=fopen(cfgPath, "r"))==NULL)	
-	{
-		fprintf(stderr,"Couldn't open config file\n");
-		exit(1);
-	}
+//reading config file and assigning globals from it
+
+	options = read_config();
+    conf_t* head = options;
+    options = head;
+    while(options!=NULL)
+    {
+        if(!strcmp("resources", options->key))
+            co_assign(resource,options->value);
+        else if(!strcmp("expenses", options->key))
+            co_assign(category[0],options->value);
+        else if(!strcmp("incomes", options->key))
+            co_assign(category[1],options->value);
+        else if(!strcmp("dbpath", options->key))
+            strcpy(dbpath,options->value);
+        options=options->next;
+    }
     
-    char temp1[RES_MAX*NAME_MAX];   
-    char temp2[CAT_MAX*NAME_MAX]; 
-    size_t pos=0; 
-	while(read_config(tmp, "dbpath", dbpath, &pos));
-    pos=0;
-	while(read_config(tmp, "resources", temp1,&pos));
-    pos=0;
-	while(read_config(tmp, "categories", temp2,&pos));
-    pos=0;
-	fclose(tmp);
-    printf("res: %s\ncat:%s\n", temp1,temp2);
 	if((tmp=fopen(dbpath, "r"))==NULL)
 	{
 		fprintf(stderr,"Database specified is not created!\n");
+		fprintf(stderr,"Creating...\n");
+        strcpy(command,"touch ");
+        strcat(command, dbpath);
+        system(command);
 		exit(1);
 	}
-
+    
 	fclose(tmp);
-	return;
 
-//dbpath is read so create it
-//bug! creates folder not a file
-	strcpy(command,"mkdir -p -m 775 ");
-	strcat(command, dbpath);
-	system(command);
-
-	strcpy(command,"touch ");
-	strcat(command, dbpath);
-	system(command);
-	if((tmp=fopen(dbpath, "r"))==NULL)
-	{
-		fprintf(stderr,"Database couldn't be opened!\n");
-		exit(1);
-	}
-	fclose(tmp);
-			
+    return;
 }
 
 void finish()

@@ -24,6 +24,15 @@
 
 #define within(A, B, C) ((A>=B) && (A<=C))
 
+char category[2][CAT_MAX][NAME_MAX];
+char resource[RES_MAX][NAME_MAX];
+
+typedef struct config{
+        char* key;
+        char* value;
+        struct config* next;
+}conf_t; 
+
 typedef struct answer{
 	char comment[64];
 	float payload;
@@ -34,7 +43,6 @@ typedef struct answer{
 char cfgPath[PATH_MAX];
 char dbpath[PATH_MAX];
 answer_t info;
-
 
 uint8_t prompt(answer_t* info);
 void print_categories(const uint8_t typecome);
