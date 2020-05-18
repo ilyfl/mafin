@@ -1,24 +1,8 @@
 
 //this file make all stream work
-
 #include "fin.h"
 #include "stream.h"
-#include <math.h>
 
-
-//currently writes on the first line only
-uint8_t write_config(const char *s, const char* var)
-{
-	FILE* config;
-	if ((config=fopen(cfgPath,"a"))==NULL)
-	{
-		return 1;
-	}
-
-	fprintf(config,"%s=%s\n", s, var);
-	fclose(config);
-	return 0;
-}
 char *trimwhitespace(char *str)
 {
   char *end;
@@ -38,9 +22,8 @@ char *trimwhitespace(char *str)
 
   return str;
 }
-
-//reads config file and sets all needed global vars
-void co_assign(char* var, char* value)
+//sets global vars
+void config_options_assign(char* var, char* value)
 {
     //divide value by separator ',' and assign tokens into array
     char* token=strtok(value, ",");
@@ -53,8 +36,22 @@ void co_assign(char* var, char* value)
     }
 
 }
+//free config options linked list
+void config_options_free(conf_t* options)
+{
+    conf_t* prev=options;
+    while(options!=NULL)
+    {
+        free(options->value);
+        free(options->key);
+        options=options->next;
+        free(prev);
+        prev=options;
+    }
+}
 
-conf_t* read_config()
+//reads config file 
+conf_t* config_read()
 {
     FILE *config;
     char *buffer;
@@ -62,7 +59,7 @@ conf_t* read_config()
     char *ptr;
     struct stat st;
 
-    conf_t* options=malloc(sizeof(conf_t));
+    conf_t* options=malloc(sizeof(*options));
     conf_t* head=options;
     options->next=NULL;
 
@@ -100,20 +97,21 @@ conf_t* read_config()
                 {
                     // left side found
                     char *tmp=ptr;
+
                     if(options->next!=NULL)
                         options=options->next;
                     options->key=malloc(ptr-token);
                     strncpy(options->key, token, ptr-token);
                     *(options->key+(ptr-token))='\0';
-                    options->key=trimwhitespace(options->key);
+    
                     //right side
                     token = ptr+1;
                     if((tmp=strchr(ptr, '\n'))!=NULL); 
                     else tmp=strchr(ptr,'\0');
                     options->value = malloc(tmp-token);
+                    
                     strncpy(options->value, token, tmp-token);
                     *(options->value+(tmp-token))='\0';
-                    options->value=trimwhitespace(options->value);
 
                     options->next=malloc(sizeof(conf_t));
                 }
@@ -122,15 +120,72 @@ conf_t* read_config()
         }
         ptr++;
     }
+    free(options->next);
     options->next=NULL;
+    free(buffer);
 	return head;
 }
-uint8_t readdb(FILE* dbfd, answer_t* info, long* pos)
+uint8_t db_read_info_buffer(char** buffer, info_t* info) {
+
+    char infoline[DBLINE_MAX];
+    uint64_t i=0;
+    char* ptr;
+
+	int*    time_ptr = &info->time.tm_sec;
+    uint8_t* info_ptr = &info->typecome;
+
+    if(**buffer == '\0')
+        return 1;
+    while(**buffer != '\n')
+    {
+        infoline[i++]=**buffer;
+        (*buffer)++;
+    }
+    (*buffer)++;
+    infoline[i]='\0';
+    ptr=&infoline[0];
+
+	//time parser
+    char* token=strtok(ptr,"-");
+    while(token!=NULL)
+    {
+        *time_ptr++ =atoi(token);
+        token=strtok(NULL,"-");
+    } 
+    while(*ptr++!='|');
+
+	//info parser
+    
+    token=strtok(ptr,",");
+    while(token!=NULL)
+    {
+        *info_ptr++ =atoi(token);
+        token=strtok(NULL,",");
+    }
+    while(*ptr++!='|');
+    token=ptr;
+    while(*++ptr!='|');
+    info->payload =strtof(token,&ptr);
+    token=ptr+1; 
+    while(*ptr++!='\0');
+    if((ptr-(token+1))!=0)
+    {
+        info->comment=malloc(ptr-token+1);
+        strncpy(info->comment, token, ptr-token);
+        *(info->comment+(ptr-token))='\0';
+    }
+    else 
+        info->comment=NULL;
+
+    return 0;
+}
+
+uint8_t db_read_info(FILE* dbfd, info_t* info, long* pos)
 {
 	char* 	infoline=malloc(DBLINE_MAX);
     char*   ptr=infoline;
-	char*   cptr=info->comment;
 	int*    time_ptr = &info->time.tm_sec;
+    uint8_t* info_ptr = &info->typecome;
 
 	if(*pos)
 		fseek(dbfd, *pos, SEEK_SET);
@@ -143,67 +198,44 @@ uint8_t readdb(FILE* dbfd, answer_t* info, long* pos)
 
 	*pos=ftell(dbfd);
 	
-	//init answer_t struct's elements with zeros
-	memset(info, 0, sizeof(answer_t));
+	memset(info, 0, sizeof(info_t));
 
 	//time parser
-    do{
-		if(isdigit(*ptr))
-			*time_ptr=10*(*time_ptr)+*ptr-'0';		
-		else if(*ptr=='-')
-			++time_ptr;
-    }while(*ptr!='|' && *ptr++!='\n');
+    char* token=strtok(ptr,"-");
+    while(token!=NULL)
+    {
+        *time_ptr++ =atoi(token);
+        token=strtok(NULL,"-");
+    } 
+    while(*ptr++!='|');
 
-
-	int8_t flag=0;
-	int8_t a=1;
-	int8_t e=0;
 	//info parser
     
-	do{
-		while(isdigit(*ptr) && !flag)
-		{
-			info->tcr=10*info->tcr+*ptr-'0';
-			++ptr;
-		}
-		while(isdigit(*ptr) && flag==1)
-		{
-			info->payload=10*info->payload+*ptr-'0';
-			++ptr;	
-		}
-		while((isalnum(*ptr)||isblank(*ptr)) && flag==2)
-		{
-			*cptr++=*ptr++;	
-		}
-		if(*ptr=='.')
-		{
-			++ptr;
-			while(isdigit(*ptr))
-			{
-				info->payload=10*info->payload+*ptr-'0';	
-				e-=1;
-				++ptr;
-			}
-		}
-		else if(*ptr=='-')
-			a=-1;
-		if(*ptr==',')
-			flag++;
-	}while(*ptr!='\n' && *ptr++!='\0');
+    token=strtok(ptr,",");
+    while(token!=NULL)
+    {
+        *info_ptr++ =atoi(token);
+        token=strtok(NULL,",");
+    }
+    while(*ptr++!='|');
+    token=ptr;
+    while(*++ptr!='|');
+    info->payload=strtof(token,&ptr);
+    token=ptr; 
+    token++;
+    while(*++ptr!='\n');
+    if((ptr-token)!=0)
+    {
+        info->comment=malloc(ptr-token+1);
+        strncpy(info->comment, token, ptr-token);
+        *(info->comment+(ptr-token))='\0';
+    }
 
-	info->tcr*=a;
-	while(e)
-	{
-		info->payload*=0.1;
-		++e;
-	}
-	
     free(infoline);
 	return 0;
 }
 
-//goes to the end of file and adds new info
-uint8_t storedb(answer_t* info, char* dbpath)
+uint8_t db_store_info(info_t* info, char* dbpath)
 {
 	FILE *db;
 	if((db=fopen(dbpath, "a"))==NULL)
@@ -211,24 +243,31 @@ uint8_t storedb(answer_t* info, char* dbpath)
 		return 1;	
 	}	
 
-	fprintf(db,"%02d-%02d-%02d-%02d-%02d-%d|",info->time.tm_sec, info->time.tm_min, info->time.tm_hour, info->time.tm_mday, info->time.tm_mon, info->time.tm_year);	
-	fprintf(db,"%d,%.2f,%s\n",info->tcr, info->payload, info->comment);
+	fprintf(db, FORMAT ,info->time.tm_sec, info->time.tm_min, info->time.tm_hour, info->time.tm_mday, info->time.tm_mon, info->time.tm_year, info->typecome,info->category,info->resource,info->currency, info->payload);	
+    if(info->comment!=NULL)
+    {
+        fprintf(db,"%s\n", info->comment);
+        free(info->comment);
+    }
+    else 
+        fprintf(db,"\n");
+
 
 	fclose(db);
 	
 	return 0;
 }
 
-uint8_t chEntry_n(answer_t* info, char* dbpath, size_t number)
+uint8_t db_change_entry_by_num(info_t* info, char* dbpath, size_t number)
 {
-    if(rmEntry_n(dbpath, number))
+    if(db_rm_entry_by_num(dbpath, number))
         return 1;
-    if(insEntry_n(info,dbpath,number))
+    if(db_ins_entry_by_num(info,dbpath,number))
         return 1;
     return 0;
 }
 
-uint8_t insEntry_n(answer_t* info,char* dbpath, size_t number) 
+uint8_t db_ins_entry_by_num(info_t* info,char* dbpath, size_t number) 
 {
     FILE *db;
     char *buffer;
@@ -261,7 +300,7 @@ uint8_t insEntry_n(answer_t* info,char* dbpath, size_t number)
         {
             time_t t = time(NULL);
             info->time = *localtime(&t);
-            storedb(info, dbpath);
+            db_store_info(info, dbpath);
             free(buffer);
             return 0;
         }
@@ -280,7 +319,15 @@ uint8_t insEntry_n(answer_t* info,char* dbpath, size_t number)
     time_t t = time(NULL);
     info->time = *localtime(&t);
 
-	sprintf(insLine,"%02d-%02d-%02d-%02d-%02d-%d|%d,%.2f,%s\n",info->time.tm_sec, info->time.tm_min, info->time.tm_hour, info->time.tm_mday, info->time.tm_mon, info->time.tm_year,info->tcr, info->payload, info->comment);	
+    sprintf(insLine, FORMAT ,info->time.tm_sec, info->time.tm_min, info->time.tm_hour, info->time.tm_mday, info->time.tm_mon, info->time.tm_year,info->typecome,info->category,info->resource,info->currency, info->payload );	
+
+    if(info->comment != NULL)
+    {
+        strcat(insLine,info->comment);	
+        strcat(insLine,"\n");
+        free(info->comment);
+    }
+    else strcat(insLine,"\n");	
 
     insLineSize=strlen(insLine);
     size_t pos=ptr-buffer;
@@ -302,7 +349,7 @@ uint8_t insEntry_n(answer_t* info,char* dbpath, size_t number)
     return 0;
 }
 
-uint8_t rmEntry_n(const char* dbpath, size_t number) 
+uint8_t db_rm_entry_by_num(const char* dbpath, size_t number) 
 {
     FILE *db;
     char *buffer;
@@ -312,6 +359,16 @@ uint8_t rmEntry_n(const char* dbpath, size_t number)
     size_t i=1;  
     struct stat st;
 
+    if(number == -1)
+    {
+        char command[INP_MAX]="rm ";
+        strcat(command, dbpath);
+        system(command);
+        strcpy(command, "touch ");
+        strcat(command, dbpath);
+        system(command);
+        return 0;
+    }
 
     if(stat(dbpath,&st))
         return 1;
@@ -358,3 +415,91 @@ uint8_t rmEntry_n(const char* dbpath, size_t number)
     return 0;
 }
 
+
+int db_from_sheet_convert(info_t* info, char* dbpath)
+{
+
+    char c = 'a';
+    uint64_t size=2*sizeof (char);
+    char *buffer = malloc(size);
+    char *ptr = buffer;
+    uint32_t i=0;
+
+    while((c = getchar())!=EOF)
+    {
+        if(c == '\n')
+        {
+            *++ptr='\0';
+            //time parser
+            strptime(buffer, "%d.%m.%Y %H:%M:%S", &info->time); 
+
+            ptr = buffer;
+            for(int j = 0; j < 2; ptr++)
+                if(*ptr==' ')
+                    j++; 
+
+            info->typecome=0;
+            info->currency=0;
+            info->comment=NULL;
+            if(!strncmp(ptr, "Food", 4))
+                info->category=0;
+            else if(!strncmp(ptr, "EatingOut", 9))
+                info->category=1;
+            else if(!strncmp(ptr, "Entertainment", 13))
+                info->category=2;
+            else if(!strncmp(ptr, "Transport", 9))
+                info->category=3;
+            else if(!strncmp(ptr, "Bills", 5))
+                info->category=4;
+            else if(!strncmp(ptr, "Clothes", 7))
+                info->category=5;
+            else if(!strncmp(ptr, "Health", 6))
+                info->category=6;
+            else if(!strncmp(ptr, "Phone", 5))
+                info->category=7;
+            else if(!strncmp(ptr, "Toiletry", 8))
+                info->category=8;
+            else if(!strncmp(ptr, "Other", 5))
+                info->category=9;
+            else if(!strncmp(ptr, "Dollars", 7))
+                info->category=10;
+
+            while(*ptr!=' ') ptr++;
+            char* token=ptr;
+            while(*ptr!=' ') ptr++;
+            info->payload = (strtof(token, &ptr));
+            ++ptr;
+resource:
+            if(*ptr == ' ')
+            {
+                token = ptr+1;
+                while(*ptr!='\0') ptr++;
+                if(!strncmp(token, "Cash", 4))
+                    info->resource = 0;
+                else if(!strncmp(token, "Pivdennyi", 9))
+                    info->resource = 1;
+            }
+            else 
+            {
+                token = ptr;
+                while(*ptr!=' ') ptr++;
+                info->comment = malloc(ptr-token);
+                strncpy(info->comment, token, ptr-token);
+                *(info->comment+(ptr-token))='\0';
+                goto resource;
+            }
+            db_store_info(info, dbpath);
+
+            i=0;
+            size = 2 * sizeof (char);
+        }
+        else 
+        {
+            buffer = realloc(buffer, ++size); 
+            ptr = buffer + i++;
+            *ptr = c;
+        }
+    }
+    free(buffer);
+	return 0;
+}
