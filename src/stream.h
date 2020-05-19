@@ -1,7 +1,5 @@
 #pragma once
 
-#include <math.h>
-#include <assert.h>
 
 char *trimwhitespace(char *str);
 uint8_t db_read_info(FILE* dbfd, info_t* info, long* pos); /*reads one line of information from database file at position pos*/

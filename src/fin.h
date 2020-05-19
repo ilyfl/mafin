@@ -1,16 +1,20 @@
+#pragma once
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <mysql/mysql.h>
 #include <stdint.h>
 #include <signal.h>
+#include <math.h>
+#include <assert.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <time.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <getopt.h>
 
-#pragma once
 
 #define PATH_MAX 128
 #define NAME_MAX 64

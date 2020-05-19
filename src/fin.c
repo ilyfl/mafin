@@ -2,9 +2,6 @@
 #include "stream.h"
 #include "misc.h"
 
-//TODO:
-//Sorting
-
 
 void print_info(info_t* info)
 {
@@ -66,6 +63,24 @@ int ints_compare_desc(const void* a, const void* b)
         return 0;
 }
 
+int uint8_compare_asc(const void* a, const void* b)
+{
+    int t =(*(uint8_t *)a - *(uint8_t*) b); 
+    if(t > 0)
+        return 1;
+    else 
+        return 0;
+}
+int uint8_compare_desc(const void* a, const void* b)
+{
+    int t =(*(uint8_t *)b - *(uint8_t*) a); 
+    if(t > 0)
+        return 1;
+    else 
+        return 0;
+}
+
+
 
 void swap(info_t* A, info_t* B)
 {
@@ -74,83 +89,20 @@ void swap(info_t* A, info_t* B)
     *B = temp;
 }
 
-
-
-void merge_float_sort(uint32_t count, info_t* base, int (*cmp)(const void *, const void *))
-{
-    info_t* temp=malloc(sizeof *temp * count);
-
-    if(count == 1)
-    {
-    }
-    else if(count==2)
-    {
-        info_t *EntryA = base;
-        info_t *EntryB = base + 1;
-
-        //if(EntryA->payload > EntryB->payload)
-        if(cmp(&EntryA->payload, &EntryB->payload))
-            swap(EntryA, EntryB);
-    }
-    else 
-    {
-        uint32_t half0 = count/2;
-        uint32_t half1 = count-half0; 
-        info_t *inHalf0 = base;
-        info_t *inHalf1 = base + half0;
-
-        merge_float_sort(half0, inHalf0,cmp);
-        merge_float_sort(half1, inHalf1,cmp);
-
-        info_t *EntryA = inHalf0;
-        info_t *EntryB = inHalf1;
-        info_t *end = base + count;
-        for(uint32_t i = 0; i < count; i++)
-        {
-            if(EntryA == inHalf1) {
-                temp[i] = *EntryB++;
-            }
-            else if(EntryB == end) {
-                temp[i] = *EntryA++;
-            }
-            else if(!cmp(&EntryA->payload, &EntryB->payload)) {
-                temp[i] = *EntryA++;
-            }
-            else {
-                temp[i] = *EntryB++;
-            }
-
-        }
-        for(uint32_t i = 0; i < count; i++)
-            base[i]=temp[i];
-    }
-
-    free(temp);
-
-}
-
-void merge_date_sort(uint32_t count, info_t* base, void *elem, int (*cmp)(const void *, const void *))
+void merge_sort(uint32_t count, info_t* base, void *elem, info_t* temp, int (*cmp)(const void *, const void *))
 {
     uint32_t offset = elem - (void*)base;
-    info_t* temp=malloc(sizeof *temp * count);
 
-    if(count == 1)
-    {
-    }
+    if(count == 1);
+
     else if(count==2)
     {
         info_t *EntryA = base;
         info_t *EntryB = base + 1;
-        void* tmp = (void*)EntryA;
-        tmp+=offset;
-        int* sortKey0 = tmp;
-        tmp = (void*)EntryB;
-        tmp+=offset;
-        int* sortKey1 = tmp;
-        //int* sortKey0 = (uint8_t*)EntryA;
-        //int* sortKey1 = (uint8_t*)EntryB;
-        //sortKey0 += offset;
-        //sortKey1 += offset;
+        void* sortKey0 = (void*)EntryA;
+        sortKey0 += offset;
+        void* sortKey1 = (void*)EntryB;
+        sortKey1 += offset;
 
         if(cmp(sortKey0, sortKey1))
             swap(EntryA, EntryB);
@@ -161,19 +113,13 @@ void merge_date_sort(uint32_t count, info_t* base, void *elem, int (*cmp)(const 
         uint32_t half1 = count-half0; 
         info_t *inHalf0 = base;
         info_t *inHalf1 = base + half0;
-        void* tmp = (void*)inHalf0;
-        tmp+=offset;
-        int* sortKey0 = tmp;
-        tmp = (void*)inHalf1;
-        tmp+=offset;
-        int* sortKey1 = tmp;
-        //int* sortKey0 =(uint8_t*) inHalf0;
-        //int* sortKey1 =(uint8_t*) inHalf1;
-        //sortKey0+=offset;
-        //sortKey1+=offset;
+        void* sortKey0 = (void*)inHalf0;
+        sortKey0 += offset;
+        void* sortKey1 = (void*)inHalf1;
+        sortKey1 += offset;
 
-        merge_date_sort(half0, inHalf0, sortKey0, cmp);
-        merge_date_sort(half1, inHalf1, sortKey1, cmp);
+        merge_sort(half0, inHalf0, sortKey0, temp, cmp);
+        merge_sort(half1, inHalf1, sortKey1, temp, cmp);
 
         info_t *EntryA = inHalf0;
         info_t *EntryB = inHalf1;
@@ -181,16 +127,11 @@ void merge_date_sort(uint32_t count, info_t* base, void *elem, int (*cmp)(const 
         info_t *Out = temp;
         for(uint32_t i = 0; i < count; i++)
         {
-            void* tmp = (void*)EntryA;
-            tmp+=offset;
-            int* sortKey0 = tmp;
-            tmp = (void*)EntryB;
-            tmp+=offset;
-            int* sortKey1 = tmp;
-            //uint8_t* sortKey0 = (uint8_t*)EntryA;
-            //uint8_t* sortKey1 = (uint8_t*)EntryB;
-            //sortKey0+=offset;
-            //sortKey1+=offset;
+            void* sortKey0 = (void*)EntryA;
+            sortKey0 += offset;
+            void* sortKey1 = (void*)EntryB;
+            sortKey1 += offset;
+
             if(EntryA == inHalf1) {
                 temp[i] = *EntryB++;
             }
@@ -209,74 +150,8 @@ void merge_date_sort(uint32_t count, info_t* base, void *elem, int (*cmp)(const 
             base[i]=temp[i];
     }
 
-    free(temp);
-
 }
-void merge_sort(uint32_t count, info_t* base, void *elem)
-{
-    uint32_t offset = elem - (void*)base;
-    info_t* temp=malloc(sizeof *temp * count);
 
-    if(count == 1)
-    {
-    }
-    else if(count==2)
-    {
-        info_t *EntryA = base;
-        info_t *EntryB = base + 1;
-        uint8_t* sortKey0 = (uint8_t*)EntryA;
-        uint8_t* sortKey1 = (uint8_t*)EntryB;
-        sortKey0 += offset;
-        sortKey1 += offset;
-
-        if(*sortKey0 > *sortKey1)
-            swap(EntryA, EntryB);
-    }
-    else 
-    {
-        uint32_t half0 = count/2;
-        uint32_t half1 = count-half0; 
-        info_t *inHalf0 = base;
-        info_t *inHalf1 = base + half0;
-        uint8_t* sortKey0 =(uint8_t*) inHalf0;
-        uint8_t* sortKey1 =(uint8_t*) inHalf1;
-        sortKey0+=offset;
-        sortKey1+=offset;
-
-        merge_sort(half0, inHalf0, sortKey0);
-        merge_sort(half1, inHalf1, sortKey1);
-
-        info_t *EntryA = inHalf0;
-        info_t *EntryB = inHalf1;
-        info_t *end = base + count;
-        info_t *Out = temp;
-        for(uint32_t i = 0; i < count; i++)
-        {
-            uint8_t* sortKey0 = (uint8_t*)EntryA;
-            uint8_t* sortKey1 = (uint8_t*)EntryB;
-            sortKey0+=offset;
-            sortKey1+=offset;
-            if(EntryA == inHalf1) {
-                temp[i] = *EntryB++;
-            }
-            else if(EntryB == end) {
-                temp[i] = *EntryA++;
-            }
-            else if(*sortKey0 <= *sortKey1) {
-                temp[i] = *EntryA++;
-            }
-            else {
-                temp[i] = *EntryB++;
-            }
-
-        }
-        for(uint32_t i = 0; i < count; i++)
-            base[i]=temp[i];
-    }
-
-    free(temp);
-
-}
 void radix_sort(uint32_t count, info_t* base, void* elem)
 {
     info_t *source = base;
@@ -284,18 +159,18 @@ void radix_sort(uint32_t count, info_t* base, void* elem)
     info_t *temp = malloc(count * sizeof *temp);
     info_t *dest = temp;
 
-    for(uint32_t byteIndex = 0; byteIndex < 8; byteIndex+=1)
+    for(uint32_t byteIndex = 0; byteIndex < 8; byteIndex+=4)
     {
-        uint32_t sortKeyOffset[2]={};
+        uint32_t sortKeyOffset[16]={};
         for(uint32_t i = 0; i < count; i++)
         {
             uint8_t* radixNum = (uint8_t*)&source[i];
             radixNum += offset;
-            uint8_t radixPiece = (*radixNum >> byteIndex) & 0x01;
+            uint8_t radixPiece = (*radixNum >> byteIndex) & 0x0F;
             ++sortKeyOffset[radixPiece];
         }
         uint32_t total = 0;
-        for(uint8_t index = 0; index < 2; index++)
+        for(uint8_t index = 0; index < 16; index++)
         {
             uint32_t num = sortKeyOffset[index];
             sortKeyOffset[index] = total;
@@ -305,7 +180,7 @@ void radix_sort(uint32_t count, info_t* base, void* elem)
         {
             uint8_t* radixNum = (uint8_t*)&source[i];
             radixNum += offset;
-            uint8_t radixPiece = (*radixNum >> byteIndex) & 0x01;
+            uint8_t radixPiece = (*radixNum >> byteIndex) & 0x0F;
             dest[sortKeyOffset[radixPiece]++]=source[i];
         }
         info_t *swap_temp = dest;
@@ -314,6 +189,7 @@ void radix_sort(uint32_t count, info_t* base, void* elem)
     }
     free(temp);
 }
+
 uint8_t sort_date(uint8_t order)
 {
     FILE* dbfd;
@@ -340,24 +216,31 @@ uint8_t sort_date(uint8_t order)
         while(!db_read_info(dbfd, &info[i++], &pos));
     else return 1;
 
-    if(order=='+')
-    {
-    merge_date_sort(NUM, info, &info->time.tm_sec, ints_compare_asc);
-    merge_date_sort(NUM, info, &info->time.tm_min, ints_compare_asc);
-    merge_date_sort(NUM, info, &info->time.tm_hour,ints_compare_asc);
-    merge_date_sort(NUM, info, &info->time.tm_mday, ints_compare_asc);
-    merge_date_sort(NUM, info, &info->time.tm_mon, ints_compare_asc);
-    merge_date_sort(NUM, info, &info->time.tm_year, ints_compare_asc);
+    info_t* temp = malloc(NUM * sizeof *temp);
+
+    if(order=='+') {
+        merge_sort(NUM, info, &info->time.tm_sec, temp,ints_compare_asc);
+        merge_sort(NUM, info, &info->time.tm_min, temp,ints_compare_asc);
+        merge_sort(NUM, info, &info->time.tm_hour,temp,ints_compare_asc);
+        merge_sort(NUM, info, &info->time.tm_mday,temp,ints_compare_asc);
+        merge_sort(NUM, info, &info->time.tm_mon, temp,ints_compare_asc);
+        merge_sort(NUM, info, &info->time.tm_year,temp,ints_compare_asc);
     }
-    else 
-    {
-    merge_date_sort(NUM, info, &info->time.tm_sec, ints_compare_desc);
-    merge_date_sort(NUM, info, &info->time.tm_min, ints_compare_desc);
-    merge_date_sort(NUM, info, &info->time.tm_hour,ints_compare_desc);
-    merge_date_sort(NUM, info, &info->time.tm_mday, ints_compare_desc);
-    merge_date_sort(NUM, info, &info->time.tm_mon, ints_compare_desc);
-    merge_date_sort(NUM, info, &info->time.tm_year, ints_compare_desc);
+
+    else if(order=='-') {
+        merge_sort(NUM, info, &info->time.tm_sec, temp,ints_compare_desc);
+        merge_sort(NUM, info, &info->time.tm_min, temp,ints_compare_desc);
+        merge_sort(NUM, info, &info->time.tm_hour,temp,ints_compare_desc);
+        merge_sort(NUM, info, &info->time.tm_mday,temp,ints_compare_desc);
+        merge_sort(NUM, info, &info->time.tm_mon, temp,ints_compare_desc);
+        merge_sort(NUM, info, &info->time.tm_year,temp,ints_compare_desc);
     }
+
+    else {
+        free(temp);
+        return 1;
+    }
+
     db_rm_entry_by_num(dbpath,-1);
     for(int i = 0; i < NUM; i++)
     {
@@ -366,6 +249,7 @@ uint8_t sort_date(uint8_t order)
 
     return 0;
 }
+
 uint8_t sort_uint8(uint8_t order, char* elem)
 {
     FILE* dbfd;
@@ -389,62 +273,49 @@ uint8_t sort_uint8(uint8_t order, char* elem)
     fseek(dbfd, 0 , SEEK_SET);
     while(!db_read_info(dbfd, &info[i++], &pos));
 
+    info_t * temp = malloc(NUM * sizeof *temp);
+
     if(!strncmp(elem, "category", 8))
-        radix_sort(NUM, info, &info->category);
+    {
+        if(order=='+')
+            radix_sort(NUM, info, &info->category);
+        else if(order=='-')
+            merge_sort(NUM, info, &info->category, temp, uint8_compare_desc);
+        else return 1;
+    }
+
     else if(!strncmp(elem, "resource", 8))
-        radix_sort(NUM, info, &info->resource);
+    {
+        if(order=='+')
+            radix_sort(NUM, info, &info->resource);
+        else if(order=='-')
+            merge_sort(NUM, info, &info->resource, temp, uint8_compare_desc);
+        else return 1;
+    }
+
     else if(!strncmp(elem, "currency", 8))
-        radix_sort(NUM, info, &info->currency);
+    {
+        if(order=='+')
+            radix_sort(NUM, info, &info->currency);
+        else if(order=='-')
+            merge_sort(NUM, info, &info->currency, temp, uint8_compare_desc);
+        else return 1;
+    }
+    else if(!strncmp(elem, "typecome", 8))
+    {
+        if(order=='+')
+            radix_sort(NUM, info, &info->typecome);
+        else if(order=='-')
+            merge_sort(NUM, info, &info->typecome, temp, uint8_compare_desc);
+        else return 1;
+    }
+
+    free(temp);
 
     db_rm_entry_by_num(dbpath,-1);
     for(i = 0; i < NUM; i++)
     {
         db_store_info(&info[i], dbpath);
-    }
-
-    return 0;
-}
-uint8_t sort_bit(uint8_t order)
-{
-    FILE* dbfd;
-    int NUM=0;
-    size_t pos=0;
-    char c='a';
-    uint32_t i = 0;
-
-    if((dbfd=fopen(dbpath, "r"))==NULL)
-    {
-		fprintf(stderr, "Error occured while opening a file\n");
-        return 1;
-    }
-    while((c=fgetc(dbfd))!=EOF)
-        if(c == '\n')
-            NUM++;
-
-    info_t info[NUM];
-
-    fseek(dbfd, 0 , SEEK_SET);
-    while(!db_read_info(dbfd, &info[i++], &pos));
-    db_rm_entry_by_num(dbpath,-1);
-    for(int j = 0; j <= 1; j++)
-    {
-        if(order=='+')
-        {
-            for(i=0; i< NUM;i++)
-                if(!info[i].typecome)
-                    db_store_info(&info[i], dbpath);
-            order='-';
-        }
-        else if(order=='-')
-        {
-            for(i=0; i< NUM;i++)
-                if(info[i].typecome)
-                    db_store_info(&info[i], dbpath);
-            order='+';
-        }
-        else{
-            return 1;
-        } 
     }
 
     return 0;
@@ -473,17 +344,25 @@ uint8_t sort_payload(uint8_t order)
     if(!db_read_info(dbfd, &info[i++], &pos))
         while(!db_read_info(dbfd, &info[i++], &pos));
     else return 1;
+
+    info_t* temp = malloc(NUM * sizeof *temp);
+
     if(order=='+')
-        merge_float_sort(NUM, info, floats_compare_asc);
+        merge_sort(NUM, info, &info->payload, temp, floats_compare_asc);
     else if(order=='-')
-        merge_float_sort(NUM, info, floats_compare_desc);
+        merge_sort(NUM, info, &info->payload, temp, floats_compare_desc);
 
     else{
+        free(temp);
         return 1;
     } 
+
+    free(temp);
     db_rm_entry_by_num(dbpath,-1);
     for(i = 0; i < NUM; i++)
+    {
         db_store_info(&info[i], dbpath);
+    }
 
     return 0;
 }
@@ -525,19 +404,6 @@ uint8_t show_history(){
         printf("Database is empty\n");
         return 1;
     }
-
-#if 0 
-    time_t old = mktime(&info[0].time);
-    for(int i = 0; i < NUM; i++)
-    {
-        time_t tmp = mktime(&info[i].time);
-        if(tmp < old)
-        {
-            oldest = info[i].time;
-            old = tmp;
-        }
-    }
-#endif
     for(int i = 0; i < NUM; i++)
     {
         if(info[i].time.tm_year < oldest.tm_year) 
@@ -735,6 +601,15 @@ void init_env()
 //reading config file and assigning globals from it
 
 	options = config_read();
+    if(options==NULL)
+    {
+		fprintf(stderr,"Config file specified is not created!\n");
+		fprintf(stderr,"Creating...\n");
+        strcpy(command,"touch ");
+        strcat(command, cfgPath);
+        system(command);
+        exit(1);
+    }
     conf_t* head = options;
     options = head;
     while(options!=NULL)

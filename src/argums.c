@@ -1,6 +1,5 @@
 #include "fin.h"
 #include "stream.h"
-#include <getopt.h>
 
 void usage(char**argv);
 int multiple_option(int argc, char**argv, info_t* info);
@@ -8,7 +7,7 @@ int single_option(int argc, char**argv);
 
 void usage(char** argv)
 {
-	printf("Usage: %s [ flags ] [ expression ]\nFlags:\n\t-i - interactive\n\t-s - show history\n\t-l <number> - last <number> entries\n\t-q [+ -][date typeceom category resource currency payload] - sorts database ('+'-asc, '-'-desc)\n\t-t <digit> - typecome (0-outcome, 1-income)\n\t-m <comment> - comment\n\t-r <number> - specifies resource\n\t-c <number> - specifies category\n\t-p <float number> - specifies payload\n\t-y <number> - specifies currency\n\t-i <number> - inserts entry\n\t-g <number> - changes entry\n\t-d <number> - deletes entry\n\t-h - displays this message  \n", *argv);
+	printf("Usage: %s [ flags ] [ expression ]\nSingle option flags:\n\t-i - interactive\n\t-s - show history\n\t-l <number> - last <number> entries\n\t-q [ [+][-] ] [ [date][typecome][category][resource][currency][payload] ] - sorts database ('+'-asc, '-'-desc)\n\t-h - displays this message\nMultiple options flags:\n\t-t <digit> - typecome (0-outcome, 1-income)\n\t-c <number> - specifies category\n\t-r <number> - specifies resource\n\t-p <float number> - specifies payload\n\t-y <number> - specifies currency\n\t-m <comment> - comment\n\t-i <number> [-t][-c][-r][-p][-y][-m] - inserts entry\n\t-g <number> [-t][-c][-r][-p][-y][-m] - changes entry\n\t-d <number> - deletes entry\n", *argv);
 	printf("EXPENSE Categories:\n");
 	print_categories(0);
 	printf("INCOME Categories:\n");
@@ -30,8 +29,6 @@ int single_option(int argc, char**argv)
                     return sort_date(*optarg);
                 else if(!strncmp(optarg+1,"payload",7))
                     return sort_payload(*optarg);
-                else if(!strncmp(optarg+1,"typecome",8))
-                    return sort_bit(*optarg);
                 else if(strlen(optarg+1)==8)
                     return sort_uint8(*optarg, optarg+1);
 
