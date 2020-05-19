@@ -4,15 +4,12 @@ Fast and simple finances
 
 TODO:  
 
-- Prompt user for information: in/outcome? Category? Payload? Comment(optional)? Resource?  
 - Graphs, graphical representation of the information  
-- Show user free money  
-- Show user financial prediction (how much he can spend money, like (known salary + average random incomes))  
-- Currency convertation (sort of API for handling currency)
-- Calculate the best way to gain some amount of money
+- Show user's free money  
+- Show user's financial prediction (how much he can spend money, like (known salary + average random incomes))  
+- Currency convertation
 
 LINUX (CLI):  
-- Save info into sql  
 - Client-server model (user connects to the remote database, server stores information given, processes info)  
 
 
@@ -25,10 +22,4 @@ MOBILE (GUI):
 WINDOWS(GUI):
 - dunno what is windows
 
-Version 0.2:
-- Command line options (arguments) 
-- Program expandability (specifying categories and resources in config file, etc)
-- Changing and deleting entries
-- Output must contain information about how much user gained/spent money at some period of time(month, week, etc)
-- User should be able to look at his his history (sort, scrolling) 
 
