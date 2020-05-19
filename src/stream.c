@@ -249,7 +249,7 @@ uint8_t db_store_info(info_t* info, char* dbpath)
     if(info->comment!=NULL)
     {
         fprintf(db,"%s\n", info->comment);
-        free(&info->comment);
+        free(info->comment);
     }
     else fprintf(db,"\n");
 
