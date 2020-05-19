@@ -1,16 +1,17 @@
 FLAGS= -Wall -Wextra -pedantic -std=c99 -lm
 OBJECTS= obj/stream.o obj/misc.o obj/fin.o obj/argums.o
-stream.o : src/stream.c src/stream.h src/fin.h src/misc.h
+stream.o : 
 	gcc -c src/stream.c -o obj/stream.o $(FLAGS) 
-misc.o : src/misc.c src/fin.h src/misc.h
+misc.o : stream.o
 	gcc -c src/misc.c -o obj/misc.o $(FLAGS)
-argums.o : src/argums.c src/fin.h src/stream.h
+argums.o : misc.o
 	gcc -c src/argums.c -o obj/argums.o $(FLAGS)
-fin.o : src/fin.c src/fin.h src/stream.h src/misc.h
-	gcc -c src/fin.c -o obj/fin.o
+fin.o : argums.o 
+	gcc -c src/fin.c -o obj/fin.o $(FLAGS)
 
 
-install : fin.o  argums.o misc.o stream.o
+		
+install : fin.o 
 	gcc -o bin/fin $(OBJECTS) $(FLAGS)
 
 ifeq (,$(wildcard /home/$(USER)/.config/mafin/config))

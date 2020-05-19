@@ -1,5 +1,7 @@
 #pragma once
 
+#define _XOPEN_SOURCE
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -62,5 +64,6 @@ uint8_t sort_payload(uint8_t order);
 uint8_t sort_uint8(uint8_t order, char* elem);
 uint8_t sort_bit(uint8_t order);
 uint8_t sort_date(uint8_t order);
+uint8_t show_history();
 //void mysql_create(const char * dbname);
 

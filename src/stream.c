@@ -65,6 +65,8 @@ conf_t* config_read()
 
     if(stat(cfgPath,&st))
         return NULL;
+    else if(!st.st_size)
+        return NULL;
     else if((config=fopen(cfgPath, "r"))==NULL)
 		return NULL;	
     else if((buffer=malloc(st.st_size))==NULL)
@@ -180,7 +182,7 @@ uint8_t db_read_info_buffer(char** buffer, info_t* info) {
     return 0;
 }
 
-uint8_t db_read_info(FILE* dbfd, info_t* info, long* pos)
+uint8_t db_read_info(FILE* dbfd, info_t* info, uint64_t* pos)
 {
 	char* 	infoline=malloc(DBLINE_MAX);
     char*   ptr=infoline;
@@ -247,11 +249,9 @@ uint8_t db_store_info(info_t* info, char* dbpath)
     if(info->comment!=NULL)
     {
         fprintf(db,"%s\n", info->comment);
-        free(info->comment);
+        free(&info->comment);
     }
-    else 
-        fprintf(db,"\n");
-
+    else fprintf(db,"\n");
 
 	fclose(db);
 	
@@ -267,15 +267,15 @@ uint8_t db_change_entry_by_num(info_t* info, char* dbpath, size_t number)
     return 0;
 }
 
-uint8_t db_ins_entry_by_num(info_t* info,char* dbpath, size_t number) 
+uint8_t db_ins_entry_by_num(info_t* info,char* dbpath, uint64_t number) 
 {
     FILE *db;
     char *buffer;
     char *ptr;
     char insLine[2*sizeof(*info)];
-    size_t lineSize=1;
-    size_t remain=0;
-    size_t i=1;  
+    uint64_t lineSize=1;
+    uint64_t remain=0;
+    uint64_t i=1;  
     struct stat st;
 
     if(stat(dbpath,&st))
@@ -349,14 +349,14 @@ uint8_t db_ins_entry_by_num(info_t* info,char* dbpath, size_t number)
     return 0;
 }
 
-uint8_t db_rm_entry_by_num(const char* dbpath, size_t number) 
+uint8_t db_rm_entry_by_num(const char* dbpath, int64_t number) 
 {
     FILE *db;
     char *buffer;
     char *ptr;
-    size_t delete=1;
-    size_t remain=0;
-    size_t i=1;  
+    uint64_t delete=1;
+    uint64_t remain=0;
+    uint64_t i=1;  
     struct stat st;
 
     if(number == -1)
@@ -393,7 +393,7 @@ uint8_t db_rm_entry_by_num(const char* dbpath, size_t number)
             free(buffer);
             return 1;
         }
-        else if(i==number)
+        else if(i==(uint64_t)number)
         {
            for(char *line = ptr; *line!='\n'; ++line)
                 ++delete;

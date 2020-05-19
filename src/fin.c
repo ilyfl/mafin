@@ -38,6 +38,7 @@ int floats_compare_asc(const void* a, const void* b)
     else 
         return 0;
 }
+
 int floats_compare_desc(const void* a, const void* b)
 {
     float t =(*(float*)b - *(float*) a); 
@@ -46,6 +47,7 @@ int floats_compare_desc(const void* a, const void* b)
     else 
         return 0;
 }
+
 int ints_compare_asc(const void* a, const void* b)
 {
     int t =(*(int*)a - *(int*) b); 
@@ -54,6 +56,7 @@ int ints_compare_asc(const void* a, const void* b)
     else 
         return 0;
 }
+
 int ints_compare_desc(const void* a, const void* b)
 {
     int t =(*(int*)b - *(int*) a); 
@@ -124,7 +127,6 @@ void merge_sort(uint32_t count, info_t* base, void *elem, info_t* temp, int (*cm
         info_t *EntryA = inHalf0;
         info_t *EntryB = inHalf1;
         info_t *end = base + count;
-        info_t *Out = temp;
         for(uint32_t i = 0; i < count; i++)
         {
             void* sortKey0 = (void*)EntryA;
@@ -161,7 +163,7 @@ void radix_sort(uint32_t count, info_t* base, void* elem)
 
     for(uint32_t byteIndex = 0; byteIndex < 8; byteIndex+=4)
     {
-        uint32_t sortKeyOffset[16]={};
+        uint32_t sortKeyOffset[16]={0};
         for(uint32_t i = 0; i < count; i++)
         {
             uint8_t* radixNum = (uint8_t*)&source[i];
@@ -194,7 +196,7 @@ uint8_t sort_date(uint8_t order)
 {
     FILE* dbfd;
     int NUM=0;
-    size_t pos=0;
+    uint64_t pos=0;
     char c='a';
     uint32_t i = 0;
     if((dbfd=fopen(dbpath, "r"))==NULL)
@@ -208,13 +210,13 @@ uint8_t sort_date(uint8_t order)
 
     info_t info[NUM];
 
-    time_t key[NUM];
-    uint32_t k=10;
-
     fseek(dbfd, 0 , SEEK_SET);
     if(!db_read_info(dbfd, &info[i++], &pos))
         while(!db_read_info(dbfd, &info[i++], &pos));
-    else return 1;
+    else{
+        fclose(dbfd);
+        return 1;
+    }
 
     info_t* temp = malloc(NUM * sizeof *temp);
 
@@ -238,6 +240,7 @@ uint8_t sort_date(uint8_t order)
 
     else {
         free(temp);
+        fclose(dbfd);
         return 1;
     }
 
@@ -247,14 +250,16 @@ uint8_t sort_date(uint8_t order)
         db_store_info(&info[i], dbpath);
     }
 
+    free(temp);
+    fclose(dbfd);
     return 0;
 }
 
 uint8_t sort_uint8(uint8_t order, char* elem)
 {
     FILE* dbfd;
-    int NUM=0;
-    size_t pos=0;
+    uint32_t NUM=0;
+    uint64_t pos=0;
     char c='a';
     uint32_t i = 0;
 
@@ -268,7 +273,6 @@ uint8_t sort_uint8(uint8_t order, char* elem)
             NUM++;
 
     info_t info[NUM];
-    info_t result[NUM];
 
     fseek(dbfd, 0 , SEEK_SET);
     while(!db_read_info(dbfd, &info[i++], &pos));
@@ -281,7 +285,11 @@ uint8_t sort_uint8(uint8_t order, char* elem)
             radix_sort(NUM, info, &info->category);
         else if(order=='-')
             merge_sort(NUM, info, &info->category, temp, uint8_compare_desc);
-        else return 1;
+        else
+        {
+            fclose(dbfd);
+            return 1;
+        }
     }
 
     else if(!strncmp(elem, "resource", 8))
@@ -290,7 +298,11 @@ uint8_t sort_uint8(uint8_t order, char* elem)
             radix_sort(NUM, info, &info->resource);
         else if(order=='-')
             merge_sort(NUM, info, &info->resource, temp, uint8_compare_desc);
-        else return 1;
+        else
+        {
+            fclose(dbfd);
+            return 1;
+        }
     }
 
     else if(!strncmp(elem, "currency", 8))
@@ -299,7 +311,11 @@ uint8_t sort_uint8(uint8_t order, char* elem)
             radix_sort(NUM, info, &info->currency);
         else if(order=='-')
             merge_sort(NUM, info, &info->currency, temp, uint8_compare_desc);
-        else return 1;
+        else
+        {
+            fclose(dbfd);
+            return 1;
+        }
     }
     else if(!strncmp(elem, "typecome", 8))
     {
@@ -307,7 +323,11 @@ uint8_t sort_uint8(uint8_t order, char* elem)
             radix_sort(NUM, info, &info->typecome);
         else if(order=='-')
             merge_sort(NUM, info, &info->typecome, temp, uint8_compare_desc);
-        else return 1;
+        else
+        {
+            fclose(dbfd);
+            return 1;
+        }
     }
 
     free(temp);
@@ -318,14 +338,15 @@ uint8_t sort_uint8(uint8_t order, char* elem)
         db_store_info(&info[i], dbpath);
     }
 
+    fclose(dbfd);
     return 0;
 }
 
 uint8_t sort_payload(uint8_t order)
 {
     FILE* dbfd;
-    int NUM=0;
-    size_t pos=0;
+    uint32_t NUM=0;
+    uint64_t pos=0;
     char c='a';
     uint32_t i = 0;
 
@@ -343,7 +364,10 @@ uint8_t sort_payload(uint8_t order)
     fseek(dbfd, 0 , SEEK_SET);
     if(!db_read_info(dbfd, &info[i++], &pos))
         while(!db_read_info(dbfd, &info[i++], &pos));
-    else return 1;
+    else{
+        fclose(dbfd);
+        return 1;
+    }
 
     info_t* temp = malloc(NUM * sizeof *temp);
 
@@ -354,6 +378,7 @@ uint8_t sort_payload(uint8_t order)
 
     else{
         free(temp);
+        fclose(dbfd);
         return 1;
     } 
 
@@ -364,6 +389,8 @@ uint8_t sort_payload(uint8_t order)
         db_store_info(&info[i], dbpath);
     }
 
+    free(temp);
+    fclose(dbfd);
     return 0;
 }
 
@@ -371,7 +398,7 @@ uint8_t show_history(){
     FILE* db;
     double ov_inc=0, ov_exp=0;
     uint32_t i=0;
-    size_t pos=0;
+    uint64_t pos=0;
     uint32_t NUM=0;
     char c = 'a';
     time_t t = time(NULL);
@@ -399,12 +426,15 @@ uint8_t show_history(){
         while((!db_read_info(db, &info[i++], &pos)));
         oldest = info[0].time;
     }
+
     else 
     {
         printf("Database is empty\n");
+        fclose(db);
         return 1;
     }
-    for(int i = 0; i < NUM; i++)
+
+    for(uint32_t i = 0; i < NUM; i++)
     {
         if(info[i].time.tm_year < oldest.tm_year) 
             oldest=info[i].time;
@@ -426,12 +456,12 @@ uint8_t show_history(){
     uint64_t mon_inc[nbuckets];
     uint64_t mon_exp[nbuckets];
 
-    for(int i = 0; i < nbuckets; i++)
+    for(uint32_t i = 0; i < nbuckets; i++)
         mon_inc[i]=0;
-    for(int i = 0; i < nbuckets; i++)
+    for(uint32_t i = 0; i < nbuckets; i++)
         mon_exp[i]=0;
 
-    for(int i = 0; i < NUM; i++)
+    for(uint32_t i = 0; i < NUM; i++)
     {
         uint32_t bucket = 12 * (info[i].time.tm_year - oldest.tm_year) + (info[i].time.tm_mon - oldest.tm_mon);
         if(info[i].typecome)
@@ -448,10 +478,10 @@ uint8_t show_history(){
 
     uint8_t mon = oldest.tm_mon + 1;
     uint64_t year = oldest.tm_year + 1900;
-    for(int i = 0; i < nbuckets; i++)
+    for(uint32_t i = 0; i < nbuckets; i++)
     {
-        printf("01.%02d.%d:\n", mon, year);
-        printf("Incomes: %d\nExpenses: %d\n------\n", mon_inc[i], mon_exp[i]);
+        printf("01.%02d.%ld:\n", mon, year);
+        printf("Incomes: %ld\nExpenses: %ld\n------\n", mon_inc[i], mon_exp[i]);
         if(mon==12)
         {
             mon=1;
@@ -459,7 +489,6 @@ uint8_t show_history(){
         }
         else 
             mon++;
-
     }
 
 
@@ -493,7 +522,7 @@ void print_currencies(){
 void print_last(uint32_t n) {
 	info_t info;
 	FILE* dbfd;
-	long pos=0;
+	uint64_t pos=0;
 	if((dbfd=fopen(dbpath, "r"))==NULL)
 	{
 		fprintf(stderr, "Error occured while opening a file\n");
@@ -566,8 +595,12 @@ uint8_t prompt(info_t* info){
 	info->payload = get_float(stdin);
 
 	printf("Comment(optional): ");
-	if(get_str(stdin,info->comment))
+    info->comment = malloc(INP_MAX);
+	if(get_str(stdin, info->comment))
+    {
+        free(info->comment);
         info->comment=NULL;
+    }
 
 	print_resources();
 	printf("Resource: ");
@@ -603,11 +636,7 @@ void init_env()
 	options = config_read();
     if(options==NULL)
     {
-		fprintf(stderr,"Config file specified is not created!\n");
-		fprintf(stderr,"Creating...\n");
-        strcpy(command,"touch ");
-        strcat(command, cfgPath);
-        system(command);
+		fprintf(stderr,"Config file is not created or empty!\n");
         exit(1);
     }
     conf_t* head = options;
@@ -677,8 +706,6 @@ int main(int argc, char** argv)
             status=1;
 		}
     }
-
-     
 
     t=clock()-t;
     printf("%lli cycles, %f microseconds\n",(long long)t,(float)t/2500);

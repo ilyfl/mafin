@@ -31,7 +31,7 @@ int single_option(int argc, char**argv)
                     return sort_payload(*optarg);
                 else if(strlen(optarg+1)==8)
                     return sort_uint8(*optarg, optarg+1);
-
+                return 1;
 			case 'i':
 				prompt(&info);
 				return -1;

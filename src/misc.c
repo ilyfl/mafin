@@ -4,15 +4,13 @@
 uint8_t get_str(FILE* stream, char* str)
 {
 	char c=fgetc(stream);
-	uint8_t i=0;
-    while(c=='\n')
-        return 1;
+    if(c=='\n') return 1;
+
 	while(c!='\n' && c!='\0' && c!=EOF) {
-        str[i]=c;	
-		++i;
+        *str++=c;	
         c=fgetc(stream);
 	} 
-	str[i]='\0';
+	*str='\0';
 	return 0;
 }
 uint8_t get_digit(FILE* stream, uint8_t left, uint8_t right)
@@ -48,7 +46,7 @@ int get_number(FILE* stream, int left, int right)
 		number+=10*number+c;
     if(within(number,left,right))
         return number;
-    else return NULL;
+    else return -1;
 } 
 
 
