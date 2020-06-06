@@ -23,7 +23,7 @@ char *trimwhitespace(char *str)
   return str;
 }
 //sets global vars
-void config_options_assign(char* var, char* value)
+uint32_t config_options_assign(char* var, char* value)
 {
     //divide value by separator ',' and assign tokens into array
     char* token=strtok(value, ",");
@@ -35,6 +35,7 @@ void config_options_assign(char* var, char* value)
         token = strtok(NULL, ",");
     }
 
+    return i;
 }
 //free config options linked list
 void config_options_free(conf_t* options)
@@ -260,10 +261,32 @@ uint8_t db_store_info(info_t* info, char* dbpath)
 
 uint8_t db_change_entry_by_num(info_t* info, char* dbpath, size_t number)
 {
-    if(db_rm_entry_by_num(dbpath, number))
+    FILE *db;
+    char *buffer;
+    char *ptr;
+    char insLine[2*sizeof(*info)];
+    uint64_t lineSize=1;
+    uint64_t remain=0;
+    uint64_t i=1;  
+    struct stat st;
+
+    if(stat(dbpath,&st))
         return 1;
-    if(db_ins_entry_by_num(info,dbpath,number))
+    else if((db=fopen(dbpath, "r"))==NULL)
+		return 1;	
+    else if((buffer=malloc(st.st_size))==NULL)
+    {
+        fclose(db);
         return 1;
+    }
+    else if((size_t)(fread(buffer, 1, st.st_size, db))!=(size_t)(st.st_size))
+    {
+        fclose(db);
+        return 1;
+    }
+    fclose(db);
+
+    ptr=buffer;
     return 0;
 }
 
@@ -387,21 +410,25 @@ uint8_t db_rm_entry_by_num(const char* dbpath, int64_t number)
     fclose(db);
 
     ptr=buffer;
+
     do{
         if(ptr==buffer+st.st_size)
         {
             free(buffer);
             return 1;
         }
+
         else if(i==(uint64_t)number)
         {
            for(char *line = ptr; *line!='\n'; ++line)
                 ++delete;
            break;
         }
+
         else if(*ptr == '\n') 
             ++i;
     }while(ptr++);
+
     remain=(buffer+st.st_size) - (ptr+delete);
     
     memmove(ptr, ptr+delete, remain); 

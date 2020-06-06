@@ -9,7 +9,7 @@ uint8_t db_ins_entry_by_num(info_t* info,char* dbpath, uint64_t number); /*inser
 uint8_t db_change_entry_by_num(info_t* info,char* dbpath, uint64_t number); /*changes line of information at the database by number*/
 conf_t* config_read(); /*reads configuration file and returns pointer to the filled conf_t struct*/
 void config_options_free(conf_t* options); /* internals? frees allocated by config_read memory */
-void config_options_assign(char* var, char* value); /* internals? fills global variables by the information from config_read */
+uint32_t config_options_assign(char* var, char* value); /* internals? fills global variables by the information from config_read */
 int db_from_sheet_convert(info_t* info, char* dbpath); /* reads from stdin in formats below, converts it and stores at dbpath 
                                                             dd.mm.yyyy hh:mm:ss category payload comment resource
                                                             dd.mm.yyyy hh:mm:ss category payload  resource */

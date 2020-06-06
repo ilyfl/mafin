@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include <mysql/mysql.h>
 #include <stdint.h>
 #include <signal.h>
 #include <math.h>
@@ -28,9 +27,24 @@
 
 #define within(A, B, C) ((A>=B) && (A<=C))
 
+#define HISTORY_BY_MONTH (1 << 0)
+#define HISTORY_BY_WEEK (1 << 1)
+#define HISTORY_BY_CATEGORIES (1 << 2)
+#define HISTORY_BY_CURRENCIES (1 << 3)
+#define HISTORY_BY_RESOURCES (1 << 4)
+#define HISTORY_BY_TYPECOMES (1 << 5)
+#define HISTORY_BY_ROWS (1 << 6)
+#define HISTORY_OVERALL (1 << 7)
+
 char category[2][CAT_MAX][NAME_MAX];
 char resource[CAT_MAX][NAME_MAX];
 char currency[CAT_MAX][NAME_MAX];
+
+uint8_t category_len;
+uint8_t resource_len;
+uint8_t currency_len;
+uint8_t expense_category_len;
+uint8_t income_category_len;
 
 typedef struct config{
         char *key;
@@ -53,7 +67,7 @@ char dbpath[PATH_MAX];
 info_t info;
 
 uint8_t prompt(info_t* info);
-void print_categories(const uint8_t typecome);
+void print_categories(uint8_t typecome);
 void print_resources();
 void print_currencies();
 void print_last(uint32_t number);
@@ -64,6 +78,6 @@ uint8_t sort_payload(uint8_t order);
 uint8_t sort_uint8(uint8_t order, char* elem);
 uint8_t sort_bit(uint8_t order);
 uint8_t sort_date(uint8_t order);
-uint8_t show_history();
+uint8_t show_history(uint8_t flags);
 //void mysql_create(const char * dbname);
 
