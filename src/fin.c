@@ -94,7 +94,10 @@ void swap(info_t* A, info_t* B)
 
 void merge_sort(uint32_t count, info_t* base, void *elem, info_t* temp, int (*cmp)(const void *, const void *))
 {
-    uint32_t offset = elem - (void*)base;
+    uint32_t    offset = (char*)elem - (char*)base;
+    char*       sortKey0;
+    char*       sortKey1;
+    uint32_t    i;
 
     if(count == 1);
 
@@ -102,9 +105,10 @@ void merge_sort(uint32_t count, info_t* base, void *elem, info_t* temp, int (*cm
     {
         info_t *EntryA = base;
         info_t *EntryB = base + 1;
-        void* sortKey0 = (void*)EntryA;
+
+        sortKey0 =  (void*)EntryA;
         sortKey0 += offset;
-        void* sortKey1 = (void*)EntryB;
+        sortKey1 =  (void*)EntryB;
         sortKey1 += offset;
 
         if(cmp(sortKey0, sortKey1))
@@ -112,26 +116,35 @@ void merge_sort(uint32_t count, info_t* base, void *elem, info_t* temp, int (*cm
     }
     else 
     {
-        uint32_t half0 = count/2;
-        uint32_t half1 = count-half0; 
-        info_t *inHalf0 = base;
-        info_t *inHalf1 = base + half0;
-        void* sortKey0 = (void*)inHalf0;
+        info_t      *inHalf0;
+        info_t      *inHalf1;
+        info_t      *EntryA;
+        info_t      *EntryB;
+        info_t      *end;
+
+        uint32_t    half0;
+        uint32_t    half1;
+
+        half0 =     count/2;
+        half1 =     count-half0; 
+        inHalf0 =   base;
+        inHalf1 =   base + half0;
+        sortKey0 =  (void*)inHalf0;
         sortKey0 += offset;
-        void* sortKey1 = (void*)inHalf1;
+        sortKey1 =  (void*)inHalf1;
         sortKey1 += offset;
 
         merge_sort(half0, inHalf0, sortKey0, temp, cmp);
         merge_sort(half1, inHalf1, sortKey1, temp, cmp);
 
-        info_t *EntryA = inHalf0;
-        info_t *EntryB = inHalf1;
-        info_t *end = base + count;
-        for(uint32_t i = 0; i < count; i++)
+        EntryA = inHalf0;
+        EntryB = inHalf1;
+        end = base + count;
+        for(i = 0; i < count; i++)
         {
-            void* sortKey0 = (void*)EntryA;
+            sortKey0 = (void*)EntryA;
             sortKey0 += offset;
-            void* sortKey1 = (void*)EntryB;
+            sortKey1 = (void*)EntryB;
             sortKey1 += offset;
 
             if(EntryA == inHalf1) {
@@ -148,7 +161,7 @@ void merge_sort(uint32_t count, info_t* base, void *elem, info_t* temp, int (*cm
             }
 
         }
-        for(uint32_t i = 0; i < count; i++)
+        for(i = 0; i < count; i++)
             base[i]=temp[i];
     }
 
@@ -157,35 +170,44 @@ void merge_sort(uint32_t count, info_t* base, void *elem, info_t* temp, int (*cm
 void radix_sort(uint32_t count, info_t* base, void* elem)
 {
     info_t *source = base;
-    uint8_t offset = elem - (void*)base;
+    uint8_t offset = (char*)elem - (char*)base;
     info_t *temp = malloc(count * sizeof *temp);
     info_t *dest = temp;
+    uint32_t byteIndex;
+    uint32_t i;
 
-    for(uint32_t byteIndex = 0; byteIndex < 8; byteIndex+=4)
+    for(byteIndex = 0; byteIndex < 8; byteIndex+=4)
     {
-        uint32_t sortKeyOffset[16]={0};
-        for(uint32_t i = 0; i < count; i++)
+        uint32_t    sortKeyOffset[16]={0};
+        uint32_t    total = 0;
+        uint8_t     index;
+
+        info_t      *swap_temp;
+
+        for(i = 0; i < count; i++)
         {
-            uint8_t* radixNum = (uint8_t*)&source[i];
+            uint8_t*    radixNum = (uint8_t*)&source[i];
+            uint8_t     radixPiece;
             radixNum += offset;
-            uint8_t radixPiece = (*radixNum >> byteIndex) & 0x0F;
+            radixPiece = (*radixNum >> byteIndex) & 0x0F;
             ++sortKeyOffset[radixPiece];
         }
-        uint32_t total = 0;
-        for(uint8_t index = 0; index < 16; index++)
+
+        for(index = 0; index < 16; index++)
         {
-            uint32_t num = sortKeyOffset[index];
+            uint32_t    num = sortKeyOffset[index];
             sortKeyOffset[index] = total;
             total += num;
         }
-        for(uint32_t i = 0; i < count; i++)
+        for(i = 0; i < count; i++)
         {
-            uint8_t* radixNum = (uint8_t*)&source[i];
+            uint8_t*    radixNum = (uint8_t*)&source[i];
+            uint8_t     radixPiece; 
             radixNum += offset;
-            uint8_t radixPiece = (*radixNum >> byteIndex) & 0x0F;
+            radixPiece = (*radixNum >> byteIndex) & 0x0F;
             dest[sortKeyOffset[radixPiece]++]=source[i];
         }
-        info_t *swap_temp = dest;
+        swap_temp = dest;
         dest=source;
         source = swap_temp;
     }
@@ -194,11 +216,11 @@ void radix_sort(uint32_t count, info_t* base, void* elem)
 
 uint8_t sort_date(uint8_t order)
 {
-    FILE* dbfd;
-    int NUM=0;
-    uint64_t pos=0;
-    char c='a';
-    uint32_t i = 0;
+    FILE*       dbfd;
+    uint32_t    NUM=0;
+    uint32_t    i = 0;
+    uint64_t    pos=0;
+    char        c='a';
 
     if(order != '+' && order != '-')
         return 1;
@@ -244,7 +266,7 @@ uint8_t sort_date(uint8_t order)
     }
 
     db_rm_entry_by_num(dbpath,-1);
-    for(int i = 0; i < NUM; i++)
+    for(i = 0; i < NUM; i++)
     {
         db_store_info(&info[i], dbpath);
     }
@@ -383,14 +405,14 @@ uint8_t show_history(uint8_t flags){
         double inc;
         double exp;
 
-        double expense_category[expense_category_len];
-        double income_category[income_category_len];
+        double* expense_category;
+        double* income_category;
 
-        double income_currency[currency_len];
-        double expense_currency[currency_len];
+        double* income_currency;
+        double* expense_currency;
 
-        double income_resource[resource_len];
-        double expense_resource[resource_len];
+        double* income_resource;
+        double* expense_resource;
     }count_t;
 
     if((db=fopen(dbpath, "r"))==NULL)
@@ -441,7 +463,7 @@ uint8_t show_history(uint8_t flags){
         }
     }
 
-    uint32_t nbuckets = 12 * (current.tm_year - oldest.tm_year) + (current.tm_mon - oldest.tm_mon) + 1;
+    const uint32_t nbuckets = 12 * (current.tm_year - oldest.tm_year) + (current.tm_mon - oldest.tm_mon) + 1;
 
     count_t ov;
     count_t mon[nbuckets];
@@ -449,6 +471,15 @@ uint8_t show_history(uint8_t flags){
     //data initialization
     ov.inc = 0;
     ov.exp = 0;
+
+    ov.income_category = malloc(sizeof *(ov.income_category) * category_len);
+    ov.expense_category = malloc(sizeof *(ov.expense_category) * category_len);
+
+    ov.income_currency = malloc(sizeof *(ov.income_currency) * category_len);
+    ov.expense_currency = malloc(sizeof *(ov.expense_currency) * category_len);
+
+    ov.income_resource = malloc(sizeof *(ov.income_resource) * category_len);
+    ov.expense_resource = malloc(sizeof *(ov.expense_resource) * category_len);
 
     for(i = 0; i < expense_category_len; i++)
         ov.expense_category[i] = 0;
@@ -470,22 +501,33 @@ uint8_t show_history(uint8_t flags){
 
     for(i = 0; i < nbuckets; i++)
     {
+        uint32_t j;
+
         mon[i].inc=0;
         mon[i].exp=0;
 
-        for(uint32_t j = 0; j < expense_category_len; j++)
+        mon[i].income_category = malloc(sizeof *(mon[i].income_category) * category_len);
+        mon[i].expense_category = malloc(sizeof *(mon[i].expense_category) * category_len);
+
+        mon[i].income_currency = malloc(sizeof *(mon[i].income_currency) * category_len);
+        mon[i].expense_currency = malloc(sizeof *(mon[i].expense_currency) * category_len);
+
+        mon[i].income_resource = malloc(sizeof *(mon[i].income_resource) * category_len);
+        mon[i].expense_resource = malloc(sizeof *(mon[i].expense_resource) * category_len);
+
+        for(j = 0; j < expense_category_len; j++)
             mon[i].expense_category[j] = 0;
 
-        for(uint32_t j = 0; j < income_category_len; j++)
+        for(j = 0; j < income_category_len; j++)
             mon[i].income_category[j] = 0;
 
-        for(uint32_t j = 0; j < currency_len; j++)
+        for(j = 0; j < currency_len; j++)
         {
             mon[i].income_currency[j] = 0;
             mon[i].expense_currency[j] = 0;
         }
 
-        for(uint32_t j = 0; j < resource_len; j++)
+        for(j = 0; j < resource_len; j++)
         {
             mon[i].income_resource[j] = 0;
             mon[i].expense_resource[j] = 0;
@@ -499,11 +541,11 @@ uint8_t show_history(uint8_t flags){
 
         if(info[i].typecome)
         {
-            mon[bucket].inc += info[i].payload;
+            mon[bucket].inc += to_default_currency(&info[i]);
             mon[bucket].income_category[info[i].category] +=  info[i].payload;
             mon[bucket].income_currency[info[i].currency] +=  info[i].payload;
             mon[bucket].income_resource[info[i].resource] +=  info[i].payload;
-            ov.inc += to_default_currency(info[i].payload);
+            ov.inc += to_default_currency(&info[i]);
             ov.income_category[info[i].category] +=  info[i].payload;
             ov.income_currency[info[i].currency] +=  info[i].payload;
             ov.income_resource[info[i].resource] +=  info[i].payload;
@@ -511,11 +553,11 @@ uint8_t show_history(uint8_t flags){
 
         else
         {
-            mon[bucket].exp += info[i].payload;
+            mon[bucket].exp += to_default_currency(&info[i]);
             mon[bucket].expense_category[info[i].category] +=  info[i].payload;
             mon[bucket].expense_currency[info[i].currency] +=  info[i].payload;
             mon[bucket].expense_resource[info[i].resource] +=  info[i].payload;
-            ov.exp += to_default_currency(info[i].payload);
+            ov.exp += to_default_currency(&info[i]);
             ov.expense_category[info[i].category] +=  info[i].payload;
             ov.expense_currency[info[i].currency] +=  info[i].payload;
             ov.expense_resource[info[i].resource] +=  info[i].payload;
@@ -536,23 +578,26 @@ uint8_t show_history(uint8_t flags){
     {
         uint8_t month = oldest.tm_mon + 1;
         uint64_t year = oldest.tm_year + 1900;
+        uint32_t j;
+
         for(i = 0; i < nbuckets; i++)
         {
             printf("01.%02d.%ld:\n", month, year);
 
             if(flags & HISTORY_BY_CATEGORIES)
             {
+
                 printf("Categories:\n------\n");    
                 
                 printf("|Incomes by\n");    
-                for(uint32_t j = 0; j < income_category_len; j++)
+                for(j = 0; j < income_category_len; j++)
                 {
                     printf("\t%s: ", category[1][j]);    
                     printf("%.02f\n", mon[i].income_category[j]);    
                 }
 
                 printf("|Expenses on\n");    
-                for(uint32_t j = 0; j < expense_category_len; j++)
+                for(j = 0; j < expense_category_len; j++)
                 {
                     printf("\t%s: ", category[0][j]);    
                     printf("%.02f\n", mon[i].expense_category[j]);    
@@ -567,14 +612,14 @@ uint8_t show_history(uint8_t flags){
                 printf("Resources:\n------\n");    
                 
                 printf("|Incomes via\n");    
-                for(uint32_t j = 0; j < currency_len; j++)
+                for(j = 0; j < currency_len; j++)
                 {
                     printf("\t%s: ", resource[j]);    
                     printf("%.02f\n", mon[i].income_resource[j]);    
                 }
 
                 printf("|Expenses via\n");    
-                for(uint32_t j = 0; j < currency_len; j++)
+                for(j = 0; j < currency_len; j++)
                 {
                     printf("\t%s: ", resource[j]);    
                     printf("%.02f\n", mon[i].expense_resource[j]);    
@@ -588,14 +633,14 @@ uint8_t show_history(uint8_t flags){
                 printf("Currencies:\n------\n");    
                 
                 printf("|Incomes in\n");    
-                for(uint32_t j = 0; j < currency_len; j++)
+                for(j = 0; j < currency_len; j++)
                 {
                     printf("\t%s: ", currency[j]);    
                     printf("%.02f\n", mon[i].income_currency[j]);    
                 }
 
                 printf("|Expenses in\n");    
-                for(uint32_t j = 0; j < currency_len; j++)
+                for(j = 0; j < currency_len; j++)
                 {
                     printf("\t%s: ", currency[j]);    
                     printf("%.02f\n", mon[i].expense_currency[j]);    
@@ -623,6 +668,8 @@ uint8_t show_history(uint8_t flags){
     
     if(flags & HISTORY_OVERALL)
     {
+        uint32_t j;
+
         printf("------\nOverall:\n");
 
         if(flags & HISTORY_BY_CATEGORIES)
@@ -652,14 +699,14 @@ uint8_t show_history(uint8_t flags){
             printf("Resources:\n------\n");    
             
             printf("|Incomes via\n");    
-            for(uint32_t j = 0; j < currency_len; j++)
+            for(j = 0; j < currency_len; j++)
             {
                 printf("\t%s: ", resource[j]);    
                 printf("%.02f\n", ov.income_resource[j]);    
             }
 
             printf("|Expenses via\n");    
-            for(uint32_t j = 0; j < currency_len; j++)
+            for(j = 0; j < currency_len; j++)
             {
                 printf("\t%s: ", resource[j]);    
                 printf("%.02f\n", ov.expense_resource[j]);    
@@ -673,14 +720,14 @@ uint8_t show_history(uint8_t flags){
             printf("Currencies:\n------\n");    
             
             printf("|Incomes in\n");    
-            for(uint32_t j = 0; j < currency_len; j++)
+            for(j = 0; j < currency_len; j++)
             {
                 printf("\t%s: ", currency[j]);    
                 printf("%.02f\n", ov.income_currency[j]);    
             }
 
             printf("|Expenses in\n");    
-            for(uint32_t j = 0; j < currency_len; j++)
+            for(j = 0; j < currency_len; j++)
             {
                 printf("\t%s: ", currency[j]);    
                 printf("%.02f\n", ov.expense_currency[j]);    
@@ -695,22 +742,50 @@ uint8_t show_history(uint8_t flags){
         }
     }
 
+    free(ov.income_category);
+    free(ov.expense_category);
+
+    free(ov.income_currency);
+    free(ov.expense_currency);
+
+    free(ov.income_resource);
+    free(ov.expense_resource);
+
+    for(i = 0; i < nbuckets; i++)
+    {
+        free(mon[i].income_category);
+        free(mon[i].expense_category);
+
+        free(mon[i].income_currency);
+        free(mon[i].expense_currency);
+
+        free(mon[i].income_resource);
+        free(mon[i].expense_resource);
+    }
+
+    if(!(flags & HISTORY_BY_ROWS))
+        for(i = 0; i < NUM; i++)
+            free(info[i].comment);
+
     fclose(db);
     return 0;
 }
 
 void print_categories(uint8_t typecome){
     int count = typecome ? income_category_len : expense_category_len ;
-	for(uint8_t i = 0; i < count; ++i)
+    uint8_t i;
+	for(i = 0; i < count; ++i)
 			printf("\t%s(%d)\n", category[typecome][i], i);
 }
 
 void print_resources(){
-	for(uint8_t i=0; i < resource_len; ++i)
+    uint8_t i;
+	for(i=0; i < resource_len; ++i)
 			printf("\t%s(%d)\n", resource[i], i);
 }
 void print_currencies(){
-	for(uint8_t i=0; i < currency_len; ++i)
+    uint8_t i;
+	for(i=0; i < currency_len; ++i)
 			printf("\t%s(%d)\n", currency[i], i);
 }
 
@@ -719,13 +794,15 @@ void print_last(uint32_t n) {
 	info_t info;
 	FILE* dbfd;
 	uint64_t pos=0;
+    uint32_t i; 
+
 	if((dbfd=fopen(dbpath, "r"))==NULL)
 	{
 		fprintf(stderr, "Error occured while opening a file\n");
 		exit(1);
 	}
 	printf("Last %d entries:\n", n);
-	for(uint32_t i=0; i < n; ++i)
+	for(i=0; i < n; ++i)
 	{
 		if(db_read_info(dbfd, &info, &pos))
 			break;
@@ -808,16 +885,18 @@ uint8_t prompt(info_t* info){
 
 void init_env()
 {
+	char* 	username[NAME_MAX];
+	char 	command[PATH_MAX];
+	FILE*   tmp;
+    conf_t* options;
+    conf_t* head;
+
     category_len = 0;
     resource_len = 0;
     currency_len = 0;
     expense_category_len = 0;
     income_category_len = 0;
 
-	char* 	username[NAME_MAX];
-	char 	command[PATH_MAX];
-	FILE*   tmp;
-    conf_t* options;
 	if(get_username(username))
 	{
 		fprintf(stderr,"Username is not defined!\n");
@@ -842,21 +921,21 @@ void init_env()
         exit(1);
     }
 
-    conf_t* head = options;
+    head = options;
     options = head;
     while(options!=NULL)
     {
         if(!strcmp("resources", trimwhitespace(options->key)))
-            resource_len = config_options_assign(resource,options->value);
+            resource_len = config_options_assign((char*)resource,options->value);
 
         else if(!strcmp("currencies", trimwhitespace(options->key)))
-            currency_len = config_options_assign(currency,options->value);
+            currency_len = config_options_assign((char*)currency,options->value);
 
         else if(!strcmp("expenses", trimwhitespace(options->key)))
-            expense_category_len = config_options_assign(category[0],options->value);
+            expense_category_len = config_options_assign((char*)category[0],options->value);
 
         else if(!strcmp("incomes", trimwhitespace(options->key)))
-            income_category_len = config_options_assign(category[1],options->value);
+            income_category_len = config_options_assign((char*)category[1],options->value);
 
         else if(!strcmp("dbpath", trimwhitespace(options->key)))
             strcpy(dbpath,trimwhitespace(options->value));
@@ -892,11 +971,11 @@ void finish()
 
 int main(int argc, char** argv)
 {
-	(void) signal(SIGINT,finish);
     uint8_t status=0;
+    clock_t t;
+	(void) signal(SIGINT,finish);
 
-//    clock_t t;
-//    t=clock();
+    t=clock();
 
 	init_env();
 
@@ -916,8 +995,8 @@ int main(int argc, char** argv)
 		}
     }
 
-//    t=clock()-t;
-//    printf("%lli cycles, %f microseconds\n",(long long)t,(float)t/2500);
+    t=clock()-t;
+    printf("%d cycles, %f microseconds\n",(int)t,(float)t/2500);
 
 	return status;
 }

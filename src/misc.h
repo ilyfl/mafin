@@ -6,4 +6,4 @@ int get_number(FILE* stream, int left, int right);
 uint8_t get_name(char *name);
 uint8_t get_username(char **name);
 uint8_t get_password(char *password);
-double to_default_currency(double value);
+double to_default_currency(info_t* info);

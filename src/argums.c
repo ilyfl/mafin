@@ -7,7 +7,23 @@ int single_option(int argc, char**argv);
 
 void usage(char** argv)
 {
-	printf("Usage: %s [ flags ] [ expression ]\nSingle option flags:\n\t-i - interactive\n\t-s [l]-(by lines) [o]-(overall) [m]-(monthly) [tcry] - show history\n\t-l <number> - last <number> entries\n\t-q [ [+][-] ] [ [date][typecome][category][resource][currency][payload] ] - sorts database ('+'-asc, '-'-desc)\n\t-h - displays this message\nMultiple options flags:\n\t-t <digit> - typecome (0-outcome, 1-income)\n\t-c <number> - specifies category\n\t-r <number> - specifies resource\n\t-p <float number> - specifies payload\n\t-y <number> - specifies currency\n\t-m <comment> - comment\n\t-i <number> [-t][-c][-r][-p][-y][-m] - inserts entry\n\t-g <number> [-t][-c][-r][-p][-y][-m] - changes entry\n\t-d <[l]-(last) [a]-(all)> or <number> - deletes entry\n", *argv);
+	printf("Usage: %s [ flags ] [ expression ]\n", *argv);
+    printf("Single option flags:\n");
+    printf("\t-i - interactive\n");
+    printf("\t-s [l]-(by lines) [o]-(overall) [m]-(monthly) [tcry] - show history\n");
+    printf("\t-l <number> - last <number> entries\n");
+    printf("\t-q [ [+][-] ] [ [date][typecome][category][resource][currency][payload] ] - sorts database ('+'-asc, '-'-desc)\n");
+    printf("\t-h - displays this message\n");
+    printf("Multiple options flags:\n");
+    printf("\t-t <digit> - typecome (0-outcome, 1-income)\n");
+    printf("\t-c <number> - specifies category\n");
+    printf("\t-r <number> - specifies resource\n");
+    printf("\t-p <float number> - specifies payload\n");
+    printf("\t-y <number> - specifies currency\n");
+    printf("\t-m <comment> - comment\n");
+    printf("\t-i <number> [-t][-c][-r][-p][-y][-m] - inserts entry\n");
+    printf("\t-g <number> [-t][-c][-r][-p][-y][-m] - changes entry\n");
+    printf("\t-d <[l]-(last) [a]-(all)> or <number> - deletes entry\n");
 
 	printf("EXPENSE Categories:\n");
     print_categories(0);
@@ -24,6 +40,7 @@ void usage(char** argv)
 int single_option(int argc, char**argv)
 {
 		char c;
+        char *token;
 		c=getopt(argc, argv, "q:his:l:d:");
 		switch(c)
 		{
@@ -76,7 +93,6 @@ int single_option(int argc, char**argv)
                 }
 
                 //fin -d 12,13,14 - deletes 12,14,16
-                char *token;
                 token = strtok(optarg, ",");
                 while(token!=NULL)
                 {
@@ -148,8 +164,9 @@ int parse_options(int argc, char** argv)
 int multiple_option(int argc, char** argv, info_t* info){
     size_t insNum=0;
     size_t chNum=0;
-	memset(info, 0, sizeof(*info));
 	char c;
+
+	memset(info, 0, sizeof(*info));
 	while((c=getopt(argc, argv, "i:t:c:r:y:p:m:g:"))!=-1)
 	{
 		switch(c)
@@ -215,9 +232,9 @@ int multiple_option(int argc, char** argv, info_t* info){
 
     if(chNum)
     {
-        if(db_change_entry_by_num(info, dbpath, chNum))
+        //if(db_change_entry_by_num(info, dbpath, chNum))
             return 1;
-        return 0;
+        //return 0;
     }
 
     if(insNum)

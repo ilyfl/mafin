@@ -1,4 +1,5 @@
-#pragma once
+#ifndef FIN_H
+#define FIN_H  1
 
 #define _XOPEN_SOURCE
 
@@ -81,3 +82,4 @@ uint8_t sort_date(uint8_t order);
 uint8_t show_history(uint8_t flags);
 //void mysql_create(const char * dbname);
 
+#endif

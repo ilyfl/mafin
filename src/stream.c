@@ -1,7 +1,10 @@
 
-//this file make all stream work
+#if 0
+this file make all stream work
+#endif 
 #include "fin.h"
 #include "stream.h"
+
 
 char *trimwhitespace(char *str)
 {
@@ -86,7 +89,7 @@ conf_t* config_read()
 
     while(*ptr!='\0')
     {
-        if((*ptr=='#'))
+        if(*ptr=='#')
         {
             while(*ptr!='\n' && *ptr != '\0')
                 ptr++;
@@ -137,6 +140,8 @@ uint8_t db_read_info_buffer(char** buffer, info_t* info) {
 	int*    time_ptr = &info->time.tm_sec;
     uint8_t* info_ptr = &info->typecome;
 
+    char *token;
+
     if(**buffer == '\0')
         return 1;
     while(**buffer != '\n')
@@ -149,7 +154,7 @@ uint8_t db_read_info_buffer(char** buffer, info_t* info) {
     ptr=&infoline[0];
 
 	//time parser
-    char* token=strtok(ptr,"-");
+    token = strtok(ptr,"-");
     while(token!=NULL)
     {
         *time_ptr++ =atoi(token);
@@ -168,7 +173,7 @@ uint8_t db_read_info_buffer(char** buffer, info_t* info) {
     while(*ptr++!='|');
     token=ptr;
     while(*++ptr!='|');
-    info->payload =strtof(token,&ptr);
+    info->payload = strtof(token,&ptr);
     token=ptr+1; 
     while(*ptr++!='\0');
     if((ptr-(token+1))!=0)
@@ -190,6 +195,8 @@ uint8_t db_read_info(FILE* dbfd, info_t* info, uint64_t* pos)
 	int*    time_ptr = &info->time.tm_sec;
     uint8_t* info_ptr = &info->typecome;
 
+    char *token;
+
 	if(*pos)
 		fseek(dbfd, *pos, SEEK_SET);
 			
@@ -204,7 +211,7 @@ uint8_t db_read_info(FILE* dbfd, info_t* info, uint64_t* pos)
 	memset(info, 0, sizeof(info_t));
 
 	//time parser
-    char* token=strtok(ptr,"-");
+    token=strtok(ptr,"-");
     while(token!=NULL)
     {
         *time_ptr++ =atoi(token);
@@ -258,7 +265,7 @@ uint8_t db_store_info(info_t* info, char* dbpath)
 	
 	return 0;
 }
-
+#if 0
 uint8_t db_change_entry_by_num(info_t* info, char* dbpath, size_t number)
 {
     FILE *db;
@@ -289,6 +296,7 @@ uint8_t db_change_entry_by_num(info_t* info, char* dbpath, size_t number)
     ptr=buffer;
     return 0;
 }
+#endif
 
 uint8_t db_ins_entry_by_num(info_t* info,char* dbpath, uint64_t number) 
 {
@@ -300,6 +308,9 @@ uint8_t db_ins_entry_by_num(info_t* info,char* dbpath, uint64_t number)
     uint64_t remain=0;
     uint64_t i=1;  
     struct stat st;
+    size_t insLineSize;
+    time_t t;
+    size_t pos;
 
     if(stat(dbpath,&st))
         return 1;
@@ -329,7 +340,8 @@ uint8_t db_ins_entry_by_num(info_t* info,char* dbpath, uint64_t number)
         }
         else if(i==(number))
         {
-            for(char *line = ptr; *line!='\n'; ++line)
+            char *line;
+            for(line = ptr; *line!='\n'; ++line)
                 ++lineSize;
             break;
         }
@@ -338,8 +350,7 @@ uint8_t db_ins_entry_by_num(info_t* info,char* dbpath, uint64_t number)
     }while(ptr++);
 
 //char *insLine=malloc(2*sizeof(*info));
-    size_t insLineSize;
-    time_t t = time(NULL);
+    t = time(NULL);
     info->time = *localtime(&t);
 
     sprintf(insLine, FORMAT ,info->time.tm_sec, info->time.tm_min, info->time.tm_hour, info->time.tm_mday, info->time.tm_mon, info->time.tm_year,info->typecome,info->category,info->resource,info->currency, info->payload );	
@@ -353,7 +364,8 @@ uint8_t db_ins_entry_by_num(info_t* info,char* dbpath, uint64_t number)
     else strcat(insLine,"\n");	
 
     insLineSize=strlen(insLine);
-    size_t pos=ptr-buffer;
+
+    pos=ptr-buffer;
 
     st.st_size+= insLineSize;
     remain=(buffer+st.st_size) - (ptr+lineSize);
@@ -420,7 +432,8 @@ uint8_t db_rm_entry_by_num(const char* dbpath, int64_t number)
 
         else if(i==(uint64_t)number)
         {
-           for(char *line = ptr; *line!='\n'; ++line)
+           char *line;
+           for(line = ptr; *line!='\n'; ++line)
                 ++delete;
            break;
         }
@@ -451,6 +464,8 @@ int db_from_sheet_convert(info_t* info, char* dbpath)
     char *buffer = malloc(size);
     char *ptr = buffer;
     uint32_t i=0;
+    int j;
+    char* token;
 
     while((c = getchar())!=EOF)
     {
@@ -461,7 +476,7 @@ int db_from_sheet_convert(info_t* info, char* dbpath)
             strptime(buffer, "%d.%m.%Y %H:%M:%S", &info->time); 
 
             ptr = buffer;
-            for(int j = 0; j < 2; ptr++)
+            for(j = 0; j < 2; ptr++)
                 if(*ptr==' ')
                     j++; 
 
@@ -492,7 +507,7 @@ int db_from_sheet_convert(info_t* info, char* dbpath)
                 info->category=10;
 
             while(*ptr!=' ') ptr++;
-            char* token=ptr;
+            token=ptr;
             while(*ptr!=' ') ptr++;
             info->payload = (strtof(token, &ptr));
             ++ptr;

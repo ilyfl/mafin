@@ -51,12 +51,13 @@ int get_number(FILE* stream, int left, int right)
 
 
 uint8_t get_name(char *name){
+    uint8_t len;
 	if(fgets(name, sizeof(name), stdin))
 	{
 		return 1;
 	}
 	
-	uint8_t len = strlen(name)-1;	
+	len = strlen(name)-1;	
 	name[len]='\0';
 	return 0;
 }
@@ -71,9 +72,10 @@ uint8_t get_username(char **name)
 //TODO: no echo input
 uint8_t get_password(char *password)
 {
+    uint8_t len;
 	fgets(password, sizeof(password), stdin);
 
-	uint8_t len = strlen(password)-1;	
+	len = strlen(password)-1;	
 	password[len]='\0';
 
 	if((strlen(password) < MIN_INP_LEN))
@@ -84,8 +86,22 @@ uint8_t get_password(char *password)
 	return 0;
 }
 
-double to_default_currency(double value)
+double to_default_currency(info_t* info)
 {
-    return value;
+    uint8_t curr = info->currency;
+
+    switch(curr){
+
+        case 0:
+            return info->payload;
+        case 1:
+            return info->payload*27;    
+        case 2:
+            return info->payload*30;    
+        default:
+            return info->payload;
+
+    }
+    
 }
 
