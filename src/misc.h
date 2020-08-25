@@ -1,4 +1,5 @@
 
+#define _POSIX_SOURCE 1
 uint8_t get_str(FILE* stream, char* str);
 uint8_t get_digit(FILE* stream, uint8_t left, uint8_t right);
 float get_float(FILE* stream);

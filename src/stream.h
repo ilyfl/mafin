@@ -1,4 +1,5 @@
 #pragma once
+#define _POSIX_SOURCE 1
 
 
 char *trimwhitespace(char *str);

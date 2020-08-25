@@ -64,7 +64,7 @@ uint8_t get_name(char *name){
 
 uint8_t get_username(char **name)
 {
-	*name=getenv("USER");
+	*name=getenv("HOME");
 	if(*name==NULL) return 1;
 	return 0;
 }

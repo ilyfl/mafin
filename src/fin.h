@@ -2,6 +2,7 @@
 #define FIN_H  1
 
 #define _XOPEN_SOURCE
+#define _POSIX_SOURCE 1
 
 #include <stdio.h>
 #include <stdlib.h>

@@ -120,11 +120,11 @@ int single_option(int argc, char**argv)
                                 break;
 
                             case 'c':
-                                flags |= HISTORY_BY_CATEGORIES;
+                                flags |= category_len ? HISTORY_BY_CATEGORIES : 0;
                                 break;
 
                             case 'r':
-                                flags |= HISTORY_BY_RESOURCES;
+                                flags |= resource_len ? HISTORY_BY_RESOURCES : 0;
                                 break;
 
                             case 'w':
@@ -132,7 +132,7 @@ int single_option(int argc, char**argv)
                                 break;
 
                             case 'y':
-                                flags |= HISTORY_BY_CURRENCIES;
+                                flags |= currency_len ? HISTORY_BY_CURRENCIES : 0;
                                 break;
 
                             case 'l':
@@ -152,8 +152,10 @@ int parse_options(int argc, char** argv)
 {
 	if(argc<=3)
 		return single_option(argc, argv);
+
 	else if (argc >=9)
 		return multiple_option(argc, argv, &info);
+
 	else{
 		usage(argv);
 		return 1;

@@ -415,6 +415,11 @@ uint8_t show_history(uint8_t flags){
         double* expense_resource;
     }count_t;
 
+    if(!flags )
+    {
+        return 1;
+    }
+
     if((db=fopen(dbpath, "r"))==NULL)
     {
 		fprintf(stderr, "Error occured while opening a file\n");
@@ -444,6 +449,20 @@ uint8_t show_history(uint8_t flags){
         fclose(db);
         return 1;
     }
+    fclose(db);
+
+    //printing
+    if(flags & HISTORY_BY_ROWS)
+    {
+        for(i = 0; i < NUM; i++)
+        {
+            printf("%d. ", i+1);
+            print_info(&info[i]);
+        }
+        if(!flags)
+            return 0;
+    }
+
 
 
 
@@ -472,14 +491,14 @@ uint8_t show_history(uint8_t flags){
     ov.inc = 0;
     ov.exp = 0;
 
-    ov.income_category = malloc(sizeof *(ov.income_category) * category_len);
-    ov.expense_category = malloc(sizeof *(ov.expense_category) * category_len);
+    ov.income_category =    category_len ?          malloc(sizeof (double) * category_len)              : NULL;
+    ov.expense_category =   category_len ?          malloc(sizeof (double) * category_len)              : NULL;
 
-    ov.income_currency = malloc(sizeof *(ov.income_currency) * category_len);
-    ov.expense_currency = malloc(sizeof *(ov.expense_currency) * category_len);
+    ov.income_currency =    currency_len ?          malloc(sizeof (double) * currency_len)              : NULL;
+    ov.expense_currency =   currency_len ?          malloc(sizeof (double) * currency_len)              : NULL;
 
-    ov.income_resource = malloc(sizeof *(ov.income_resource) * category_len);
-    ov.expense_resource = malloc(sizeof *(ov.expense_resource) * category_len);
+    ov.income_resource =    resource_len ?          malloc(sizeof (double) * resource_len)              : NULL;
+    ov.expense_resource =   resource_len ?          malloc(sizeof (double) * resource_len)              : NULL;
 
     for(i = 0; i < expense_category_len; i++)
         ov.expense_category[i] = 0;
@@ -506,14 +525,14 @@ uint8_t show_history(uint8_t flags){
         mon[i].inc=0;
         mon[i].exp=0;
 
-        mon[i].income_category = malloc(sizeof *(mon[i].income_category) * category_len);
-        mon[i].expense_category = malloc(sizeof *(mon[i].expense_category) * category_len);
-
-        mon[i].income_currency = malloc(sizeof *(mon[i].income_currency) * category_len);
-        mon[i].expense_currency = malloc(sizeof *(mon[i].expense_currency) * category_len);
-
-        mon[i].income_resource = malloc(sizeof *(mon[i].income_resource) * category_len);
-        mon[i].expense_resource = malloc(sizeof *(mon[i].expense_resource) * category_len);
+        mon[i].income_category =    category_len ?          malloc(sizeof (double) * category_len)              : NULL;
+        mon[i].expense_category =   category_len ?          malloc(sizeof (double) * category_len)              : NULL;
+                                                                                                                    
+        mon[i].income_currency =    currency_len ?          malloc(sizeof (double) * currency_len)              : NULL;
+        mon[i].expense_currency =   currency_len ?          malloc(sizeof (double) * currency_len)              : NULL;
+                                                                                                                    
+        mon[i].income_resource =    resource_len ?          malloc(sizeof (double) * resource_len)              : NULL;
+        mon[i].expense_resource =   resource_len ?          malloc(sizeof (double) * resource_len)              : NULL;
 
         for(j = 0; j < expense_category_len; j++)
             mon[i].expense_category[j] = 0;
@@ -542,38 +561,47 @@ uint8_t show_history(uint8_t flags){
         if(info[i].typecome)
         {
             mon[bucket].inc += to_default_currency(&info[i]);
-            mon[bucket].income_category[info[i].category] +=  info[i].payload;
-            mon[bucket].income_currency[info[i].currency] +=  info[i].payload;
-            mon[bucket].income_resource[info[i].resource] +=  info[i].payload;
+
+            if(mon[bucket].income_category != NULL)
+                mon[bucket].income_category[info[i].category] +=  info[i].payload;
+            if(mon[bucket].income_currency != NULL)
+                mon[bucket].income_currency[info[i].currency] +=  info[i].payload;
+            if(mon[bucket].income_resource != NULL)
+                mon[bucket].income_resource[info[i].resource] +=  info[i].payload;
+
             ov.inc += to_default_currency(&info[i]);
-            ov.income_category[info[i].category] +=  info[i].payload;
-            ov.income_currency[info[i].currency] +=  info[i].payload;
-            ov.income_resource[info[i].resource] +=  info[i].payload;
+
+            if(ov.income_category != NULL)
+                ov.income_category[info[i].category] +=  info[i].payload;
+            if(ov.income_currency != NULL)
+                ov.income_currency[info[i].currency] +=  info[i].payload;
+            if(ov.income_resource != NULL)
+                ov.income_resource[info[i].resource] +=  info[i].payload;
         }
 
         else
         {
             mon[bucket].exp += to_default_currency(&info[i]);
-            mon[bucket].expense_category[info[i].category] +=  info[i].payload;
-            mon[bucket].expense_currency[info[i].currency] +=  info[i].payload;
-            mon[bucket].expense_resource[info[i].resource] +=  info[i].payload;
+
+            if(mon[bucket].expense_category != NULL)
+                mon[bucket].expense_category[info[i].category] +=  info[i].payload;
+            if(mon[bucket].expense_currency != NULL)
+                mon[bucket].expense_currency[info[i].currency] +=  info[i].payload;
+            if(mon[bucket].expense_resource != NULL)
+                mon[bucket].expense_resource[info[i].resource] +=  info[i].payload;
+
             ov.exp += to_default_currency(&info[i]);
-            ov.expense_category[info[i].category] +=  info[i].payload;
-            ov.expense_currency[info[i].currency] +=  info[i].payload;
-            ov.expense_resource[info[i].resource] +=  info[i].payload;
+
+            if(ov.expense_category != NULL)
+                ov.expense_category[info[i].category] +=  info[i].payload;
+            if(ov.expense_currency != NULL)
+                ov.expense_currency[info[i].currency] +=  info[i].payload;
+            if(ov.expense_resource != NULL)
+                ov.expense_resource[info[i].resource] +=  info[i].payload;
         }
     }
 
     //printing
-    if(flags & HISTORY_BY_ROWS)
-    {
-        for(i = 0; i < NUM; i++)
-        {
-            printf("%d. ", i+1);
-            print_info(&info[i]);
-        }
-    }
-
     if(flags & HISTORY_BY_MONTH)
     {
         uint8_t month = oldest.tm_mon + 1;
@@ -742,32 +770,43 @@ uint8_t show_history(uint8_t flags){
         }
     }
 
-    free(ov.income_category);
-    free(ov.expense_category);
+    if(ov.income_category != NULL)
+        free(ov.income_category);
+    if(ov.expense_category != NULL)
+        free(ov.expense_category);
 
-    free(ov.income_currency);
-    free(ov.expense_currency);
+    if(ov.income_currency != NULL)
+        free(ov.income_currency);
+    if(ov.expense_currency != NULL)
+        free(ov.expense_currency);
 
-    free(ov.income_resource);
-    free(ov.expense_resource);
+    if(ov.income_resource != NULL)
+        free(ov.income_resource);
+    if(ov.expense_resource != NULL)
+        free(ov.expense_resource);
 
     for(i = 0; i < nbuckets; i++)
     {
-        free(mon[i].income_category);
-        free(mon[i].expense_category);
+        if(mon[i].income_category != NULL)
+            free(mon[i].income_category);
+        if(mon[i].expense_category != NULL)
+            free(mon[i].expense_category);
 
-        free(mon[i].income_currency);
-        free(mon[i].expense_currency);
+        if(mon[i].income_currency != NULL)
+            free(mon[i].income_currency);
+        if(mon[i].expense_currency != NULL)
+            free(mon[i].expense_currency);
 
-        free(mon[i].income_resource);
-        free(mon[i].expense_resource);
+        if(mon[i].income_resource != NULL)
+            free(mon[i].income_resource);
+        if(mon[i].expense_resource != NULL)
+            free(mon[i].expense_resource);
     }
 
     if(!(flags & HISTORY_BY_ROWS))
         for(i = 0; i < NUM; i++)
             free(info[i].comment);
 
-    fclose(db);
     return 0;
 }
 
@@ -885,7 +924,7 @@ uint8_t prompt(info_t* info){
 
 void init_env()
 {
-	char* 	username[NAME_MAX];
+	char* 	home = getenv("HOME");
 	char 	command[PATH_MAX];
 	FILE*   tmp;
     conf_t* options;
@@ -897,19 +936,17 @@ void init_env()
     expense_category_len = 0;
     income_category_len = 0;
 
-	if(get_username(username))
+	if(home == NULL) 
 	{
-		fprintf(stderr,"Username is not defined!\n");
+		fprintf(stderr,"HOME is not defined!\n");
 		exit(1);
 	}
 	
 //initializing globals cfgPath and dbpath
-	strcpy(cfgPath,"/home/");	
-	strcat(cfgPath, *username);
+	strcpy(cfgPath, home);
 	strcat(cfgPath, "/.config/mafin/config");
 
-	strcpy(dbpath,"/home/");	
-	strcat(dbpath, *username);
+	strcpy(dbpath, home);
 	strcat(dbpath, "/mafin/finances.db");
 
 //reading config file and assigning globals from it
@@ -917,8 +954,17 @@ void init_env()
 	options = config_read();
     if(options==NULL)
     {
+        char __resources[NAME_MAX] = "Cash, Card";
+        char __currencies[NAME_MAX] = "USD, EUR";
+        char __categories[2][NAME_MAX] ={ "Food, Entertainment, Transport, Bills, Clothes, Health, Other",  "Salary, Random"};
+
 		fprintf(stderr,"Config file is not created or empty!\n");
-        exit(1);
+		fprintf(stderr,"Using default configuration\n");
+
+        resource_len =          config_options_assign((char*)resource, __resources);
+        currency_len =          config_options_assign((char*)currency,__currencies);
+        expense_category_len =  config_options_assign((char*)category[0],__categories[0]);
+        income_category_len =   config_options_assign((char*)category[1],__categories[1]);
     }
 
     head = options;
@@ -941,7 +987,9 @@ void init_env()
             strcpy(dbpath,trimwhitespace(options->value));
         options=options->next;
     }
-    config_options_free(head);
+
+    if(head != NULL)
+        config_options_free(head);
 
     category_len = income_category_len + expense_category_len;
     
@@ -972,10 +1020,10 @@ void finish()
 int main(int argc, char** argv)
 {
     uint8_t status=0;
-    clock_t t;
+//    clock_t t;
 	(void) signal(SIGINT,finish);
 
-    t=clock();
+//    t=clock();
 
 	init_env();
 
@@ -995,8 +1043,8 @@ int main(int argc, char** argv)
 		}
     }
 
-    t=clock()-t;
-    printf("%d cycles, %f microseconds\n",(int)t,(float)t/2500);
+//    t=clock()-t;
+//    printf("%d cycles, %f microseconds\n",(int)t,(float)t/2500);
 
 	return status;
 }

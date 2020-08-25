@@ -29,7 +29,7 @@ char *trimwhitespace(char *str)
 uint32_t config_options_assign(char* var, char* value)
 {
     //divide value by separator ',' and assign tokens into array
-    char* token=strtok(value, ",");
+    char* token = strtok(value, ",");
     int i = 0;
     while(token!=NULL)
     {
@@ -126,10 +126,18 @@ conf_t* config_read()
         }
         ptr++;
     }
-    free(options->next);
-    options->next=NULL;
+
+    if(options->next != NULL)
+    {
+        free(options->next);
+        options->next=NULL;
+    }
     free(buffer);
-	return head;
+
+    if(head->key == NULL)
+        return NULL;
+    else
+        return head;
 }
 uint8_t db_read_info_buffer(char** buffer, info_t* info) {
 
